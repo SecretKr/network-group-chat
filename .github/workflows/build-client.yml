@@ -54,8 +54,9 @@ jobs:
       - name: Set homepage dynamically
         run: |
           REPO_NAME=$(basename $GITHUB_REPOSITORY)
-          # Ensure homepage is set correctly in client/package.json
-          jq '.homepage = "https://'$GITHUB_REPOSITORY'.github.io/'$REPO_NAME'"' client/package.json > temp.json && mv temp.json client/package.json
+          HOMEPAGE_URL="https://secretkr.github.io/$REPO_NAME"
+          echo "Setting homepage to $HOMEPAGE_URL"
+          jq '.homepage = "'$HOMEPAGE_URL'"' client/package.json > temp.json && mv temp.json client/package.json
 
       - name: Build
         run: pnpm run build
