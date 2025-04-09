@@ -24,7 +24,7 @@ permissions:
   id-token: write
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -55,3 +55,20 @@ jobs:
         env:
           REACT_APP_BACKEND_URL: ${{ vars.REACT_APP_BACKEND_URL }}
           PORT: 80
+          
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
