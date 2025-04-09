@@ -51,13 +51,6 @@ jobs:
         run: pnpm install
         working-directory: client
 
-      - name: Set homepage dynamically
-        run: |
-          REPO_NAME=$(basename $GITHUB_REPOSITORY)
-          HOMEPAGE_URL="https://secretkr.github.io/$REPO_NAME"
-          echo "Setting homepage to $HOMEPAGE_URL"
-          jq '.homepage = "'$HOMEPAGE_URL'"' client/package.json > temp.json && mv temp.json client/package.json
-
       - name: Build
         run: pnpm run build
         working-directory: client

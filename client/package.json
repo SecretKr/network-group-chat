@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": false,
   "type": "module",
+  "homepage": "https://secretkr.github.io/network-group-chat",
   "dependencies": {
     "@tailwindcss/cli": "^4.1.1",
     "@types/react": "^19.1.0",
