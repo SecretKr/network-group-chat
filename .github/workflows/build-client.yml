@@ -1,6 +1,12 @@
 name: Build Client
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "client/**"
+      
   pull_request:
     types:
       - "opened"
@@ -47,4 +53,5 @@ jobs:
         run: pnpm run build
         working-directory: client
         env:
-          NEXT_PUBLIC_BASE_API_URL: ${{ vars.NEXT_PUBLIC_BASE_API_URL }}
+          REACT_APP_BACKEND_URL: ${{ vars.REACT_APP_BACKEND_URL }}
+          PORT: 80
