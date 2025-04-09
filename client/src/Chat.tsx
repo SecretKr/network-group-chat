@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
-
-const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 interface Message {
   message: string;
@@ -9,6 +7,8 @@ interface Message {
 }
 
 const Chat = () => {
+  const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
+
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [username, setUsername] = useState<string>("");
@@ -44,7 +44,7 @@ const Chat = () => {
       socket.off("userList");
       socket.off("receiveMessage");
     };
-  }, [username]);
+  }, [socket]);
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -80,7 +80,7 @@ const Chat = () => {
                     selectedUser === user ? "bg-blue-300" : "hover:bg-gray-200"
                   }`}
                 >
-                  {user == username ? user + " (You)" : user}
+                  {user === username ? user + " (You)" : user}
                 </li>
               ))}
             </ul>

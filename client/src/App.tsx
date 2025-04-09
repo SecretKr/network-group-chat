@@ -1,5 +1,4 @@
-import React from "react";
-import Chat from "./Chat.tsx";
+import Chat from "./Chat";
 
 const App = () => {
   return (
