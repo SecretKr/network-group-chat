@@ -59,7 +59,7 @@ jobs:
           PORT: 80
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v2
         with:
           name: github-pages
           path: client/build
