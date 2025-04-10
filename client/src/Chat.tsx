@@ -23,13 +23,27 @@ const Chat = () => {
     }
   };
 
+
+  // const sendPrivateMessage = () => {
+  //   if (userToChat && message.trim()) {
+  //     socket.emit("sendMessage", { targetUser: userToChat, message });
+  //     setMessage("");
+  //   }
+  // };
+  
   const sendPrivateMessage = () => {
     if (userToChat && message.trim()) {
-      const newMessage = { username, message };
-
+      const newMessage = {
+        username,
+        message,
+      };
+  
       // Send to server
-      socket.emit("sendMessage", { targetUser: userToChat, message });
-
+      socket.emit("sendMessage", {
+        targetUser: userToChat,
+        message,
+      });
+  
       // Update local messages
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
@@ -102,6 +116,8 @@ const Chat = () => {
 
   return (
     <div className="w-screen h-screen flex bg-gray-100">
+      
+      {/* Sidebar - User List */}
       <div className="w-1/4 border-r border-gray-300 bg-white p-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Connected Users</h2>
         <ul className="space-y-2">
@@ -124,10 +140,12 @@ const Chat = () => {
         </ul>
       </div>
 
-      {selectedUser ? (
-        <div className="flex-1 flex flex-col p-6">
-          <h1 className="text-2xl font-bold mb-4">{userToChat}</h1>
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col p-6">
+        <h1 className="text-2xl font-bold mb-4">Chat with {userToChat || "..."}</h1>
 
+        {/* Message History */}
+        {selectedUser? (
           <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
             {messages
               .filter(
@@ -137,21 +155,18 @@ const Chat = () => {
               .map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex ${
-                    msg.username === username ? "justify-end" : "justify-start"
+                  className={`max-w-xs p-3 rounded-lg ${
+                    msg.username === username ? "bg-blue-300 self-end" : "bg-gray-200 self-start"
                   }`}
                 >
-                  <div
-                    key={index}
-                    className={`max-w-xs p-3 rounded-lg ${
-                      msg.username === username ? "bg-blue-300" : "bg-gray-200"
-                    }`}
-                  >
-                    {msg.message}
-                  </div>
+                  <strong>{msg.username === username ? "You" : msg.username}:</strong> {msg.message}
                 </div>
               ))}
           </div>
+        ):(
+          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
+          </div>
+        )}
 
           <div className="flex gap-2">
             <textarea
