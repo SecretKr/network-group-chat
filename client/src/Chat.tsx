@@ -1,12 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
 
-
 interface Message {
   message: string;
   username: string;
 }
-
 
 const Chat = () => {
   const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
@@ -18,7 +16,6 @@ const Chat = () => {
   const [selectedUser, setSelectedUser] = useState<boolean>(false);
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
-
   const join = () => {
     if (username.trim()) {
       socket.emit("setUsername", username);
@@ -26,35 +23,33 @@ const Chat = () => {
     }
   };
 
-
   // const sendPrivateMessage = () => {
   //   if (userToChat && message.trim()) {
   //     socket.emit("sendMessage", { targetUser: userToChat, message });
   //     setMessage("");
   //   }
   // };
-  
+
   const sendPrivateMessage = () => {
     if (userToChat && message.trim()) {
       const newMessage = {
         username,
         message,
       };
-  
+
       // Send to server
       socket.emit("sendMessage", {
         targetUser: userToChat,
         message,
       });
-  
+
       // Update local messages
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
+
       // Clear input
       setMessage("");
     }
   };
-  
 
   useEffect(() => {
     socket.on("userList", (users: string[]) => {
@@ -72,12 +67,11 @@ const Chat = () => {
     };
   }, [socket]);
 
-
   useEffect(() => {
     // Simulate connected users (excluding self)
     const mockUsers = ["Wit", "Mio", "Touch", "Mes"];
     setUserList([username, ...mockUsers]);
-  
+
     // Simulate message history
     const mockMessages: Message[] = [
       { username: "Wit", message: "Hi! How are you?" },
@@ -98,7 +92,6 @@ const Chat = () => {
     ];
     setMessages(mockMessages);
   }, [username]);
-
 
   if (!loggedIn) {
     return (
@@ -122,7 +115,6 @@ const Chat = () => {
 
   return (
     <div className="w-screen h-screen flex bg-gray-100">
-      
       {/* Sidebar - User List */}
       <div className="w-1/4 border-r border-gray-300 bg-white p-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Connected Users</h2>
@@ -130,42 +122,54 @@ const Chat = () => {
           {userList
             .filter((user) => user !== username)
             .map((user, index) => (
-            <li
-              key={index}
-              onClick={() => { setUserToChat(user); setSelectedUser(true); }}
-              className={`cursor-pointer p-2 rounded-lg ${
-                userToChat === user ? "bg-blue-300" : "hover:bg-gray-200"
-              }`}
-            >
-              {user === username ? `${user} (You)` : user}
-            </li>
-          ))}
+              <li
+                key={index}
+                onClick={() => {
+                  setUserToChat(user);
+                  setSelectedUser(true);
+                }}
+                className={`cursor-pointer p-2 rounded-lg ${
+                  userToChat === user ? "bg-blue-300" : "hover:bg-gray-200"
+                }`}
+              >
+                {user === username ? `${user} (You)` : user}
+              </li>
+            ))}
         </ul>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col p-6">
-        <h1 className="text-2xl font-bold mb-4">Chat with {userToChat || "..."}</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          Chat with {userToChat || "..."}
+        </h1>
 
         {/* Message History */}
-        {selectedUser? (
+        {selectedUser ? (
           <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
             {messages
-              .filter((msg) => msg.username === userToChat || msg.username === username)
+              .filter(
+                (msg) =>
+                  msg.username === userToChat || msg.username === username
+              )
               .map((msg, index) => (
                 <div
                   key={index}
                   className={`max-w-xs p-3 rounded-lg ${
-                    msg.username === username ? "bg-blue-300 self-end" : "bg-gray-200 self-start"
+                    msg.username === username
+                      ? "bg-blue-300 self-end"
+                      : "bg-gray-200 self-start"
                   }`}
                 >
-                  <strong>{msg.username === username ? "You" : msg.username}:</strong> {msg.message}
+                  <strong>
+                    {msg.username === username ? "You" : msg.username}:
+                  </strong>{" "}
+                  {msg.message}
                 </div>
-            ))}
+              ))}
           </div>
-        ):(
-          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
-          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner"></div>
         )}
 
         {/* Input */}
