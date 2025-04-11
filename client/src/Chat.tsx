@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
-import { Icon } from '@iconify/react';
+import { Icon } from "@iconify/react";
 
 type Message = {
   username?: string;
