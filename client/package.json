@@ -5,6 +5,7 @@
   "type": "module",
   "homepage": "https://secretkr.github.io/network-group-chat",
   "dependencies": {
+    "@iconify/react": "^5.2.1",
     "@tailwindcss/cli": "^4.1.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.1",
