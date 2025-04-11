@@ -17,9 +17,7 @@ export function Sidebar({
     <div className="w-1/4 border-r border-gray-300 bg-white p-4 overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold mb-4">{username}</h2>
-        <button
-          className="bg-purple-500 text-white font-semibold p-2 rounded-md hover:bg-purple-700"
-        >
+        <button className="bg-purple-500 text-white font-semibold p-2 rounded-md hover:bg-purple-700">
           Create Chat Group
         </button>
       </div>
