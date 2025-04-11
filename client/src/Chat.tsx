@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
+import { MdSend } from "react-icons/md";
 
 type Message = {
   username?: string;
@@ -23,6 +24,7 @@ const Chat = () => {
   const [username, setUsername] = useState<string>("");
   const [userList, setUserList] = useState<string[]>([]);
   const [userToChat, setUserToChat] = useState<string>("");
+  const [selectedChat, setSelectedChat] = useState<boolean>(false);
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
   const handleJoin = () => {
@@ -34,6 +36,7 @@ const Chat = () => {
 
   const handleUserToChat = (user: string) => {
     setUserToChat(user);
+    setSelectedChat(true);
     setMessages((prev) => {
       const existing = prev[user] || { messages: [], unread: 0 };
       return {
@@ -130,58 +133,59 @@ const Chat = () => {
         getUnreadCount={getUnreadCount}
       />
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col p-6">
-        <h1 className="text-2xl font-bold mb-4">
-          Username: {username}, Chat with {userToChat || "..."}
-        </h1>
+      {selectedChat ? (
+        <div className="flex-1 flex flex-col p-6">
+          <h1 className="text-2xl font-bold mb-4">
+            {userToChat}
+          </h1>
 
-        {/* Message History */}
-        {userToChat && (
-          <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
-            {(messages[userToChat]?.messages || []).map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  msg.username === userToChat ? "justify-start" : "justify-end"
-                }`}
-              >
+          {userToChat && (
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
+              {(messages[userToChat]?.messages || []).map((msg, index) => (
                 <div
                   key={index}
-                  className={`max-w-xs p-3 rounded-lg ${
-                    msg.username === userToChat ? "bg-gray-200" : "bg-blue-300"
+                  className={`flex ${
+                    msg.username === userToChat ? "justify-start" : "justify-end"
                   }`}
                 >
-                  {msg.message}
+                  <div
+                    key={index}
+                    className={`max-w-xs p-3 rounded-lg ${
+                      msg.username === userToChat ? "bg-gray-200" : "bg-blue-300"
+                    }`}
+                  >
+                    {msg.message}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Input */}
-        <div className="flex gap-2">
-          <textarea
-            placeholder="Type your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendPrivateMessage();
-              }
-            }}
-            className="flex-1 p-2 border border-gray-300 rounded-md resize-none"
-          />
-          <button
-            onClick={sendPrivateMessage}
-            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-            disabled={!userToChat}
-          >
-            Send
-          </button>
+          <div className="flex h-12 gap-2">
+            <textarea
+              placeholder="Type your message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendPrivateMessage();
+                }
+              }}
+              className="flex-1 p-2 border border-gray-300 rounded-md resize-none"
+            />
+            <button
+              onClick={sendPrivateMessage}
+              className="bg-purple-500 text-white px-4 py-4 rounded-md hover:bg-purple-700"
+              disabled={!userToChat}
+            >
+              <MdSend />
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 flex flex-col p-6"></div>
+      )}
     </div>
   );
 };
