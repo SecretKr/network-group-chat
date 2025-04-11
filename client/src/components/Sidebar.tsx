@@ -1,3 +1,5 @@
+import { cn } from "../utils/utils";
+
 interface SidebarProps {
   userList: string[];
   username: string;
@@ -14,7 +16,13 @@ export function Sidebar({
   getUnreadCount,
 }: SidebarProps) {
   return (
-    <div className="w-96 border-r border-gray-300 bg-background p-4 overflow-y-auto">
+    <div
+      className={
+        cn(
+          "w-full md:w-96 border-r border-gray-300 bg-background p-4 overflow-y-auto md:block"
+        ) + (userToChat && " hidden")
+      }
+    >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">{username}</h2>
         <button className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition">

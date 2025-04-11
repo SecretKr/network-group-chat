@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { MessageMap } from "../Chat";
 
 interface ChatboxProps {
+  handleBack: () => void;
   userToChat: string | null;
   messages: MessageMap;
   setMessage: (message: string) => void;
@@ -10,6 +11,7 @@ interface ChatboxProps {
 }
 
 export function Chatbox({
+  handleBack,
   userToChat,
   messages,
   setMessage,
@@ -18,7 +20,16 @@ export function Chatbox({
 }: ChatboxProps) {
   return (
     <div className="flex-1 flex flex-col p-6 bg-background">
-      <h1 className="text-2xl font-bold mb-4">{userToChat}</h1>
+      <div className="text-center relative">
+        <div
+          className="cursor-pointer flex gap-2 items-center text-secondary absolute left-0 w-full md:hidden"
+          onClick={handleBack}
+        >
+          <Icon icon="weui:back-filled" width="12" height="24" />
+          <p className="text-xl">Back</p>
+        </div>
+        <h1 className="text-2xl font-bold mb-4">{userToChat}</h1>
+      </div>
 
       {userToChat && (
         <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">

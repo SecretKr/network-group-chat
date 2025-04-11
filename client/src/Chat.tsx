@@ -51,6 +51,11 @@ const Chat = () => {
     });
   };
 
+  const handleBack = () => {
+    setUserToChat("");
+    setSelectedChat(false);
+  };
+
   const sendPrivateMessage = () => {
     if (userToChat && message.trim()) {
       const newMessage: Message = {
@@ -135,6 +140,7 @@ const Chat = () => {
 
       {selectedChat && (
         <Chatbox
+          handleBack={handleBack}
           userToChat={userToChat}
           messages={messages}
           setMessage={setMessage}
