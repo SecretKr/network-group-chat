@@ -124,7 +124,7 @@ const Chat = () => {
   }
 
   return (
-    <div className="w-screen h-screen flex bg-gray-100">
+    <div className="w-screen h-screen flex bg-white">
       <Sidebar
         userList={userList}
         username={username}

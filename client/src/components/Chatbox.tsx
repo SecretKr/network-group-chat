@@ -17,11 +17,11 @@ export function Chatbox({
   sendPrivateMessage,
 }: ChatboxProps) {
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div className="flex-1 flex flex-col p-6 bg-background">
       <h1 className="text-2xl font-bold mb-4">{userToChat}</h1>
 
       {userToChat && (
-        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded shadow-inner">
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
           {(messages[userToChat]?.messages || []).map((msg, index) => (
             <div
               key={index}
@@ -32,7 +32,9 @@ export function Chatbox({
               <div
                 key={index}
                 className={`max-w-xs p-3 rounded-lg ${
-                  msg.username === userToChat ? "bg-gray-200" : "bg-blue-300"
+                  msg.username === userToChat
+                    ? "bg-gray-200"
+                    : "bg-primary-light"
                 }`}
               >
                 {msg.message}
@@ -42,7 +44,7 @@ export function Chatbox({
         </div>
       )}
 
-      <div className="flex h-12 gap-2">
+      <div className="flex h-12 gap-2 justify-center">
         <textarea
           placeholder="Type your message..."
           value={message}
@@ -53,13 +55,13 @@ export function Chatbox({
               sendPrivateMessage();
             }
           }}
-          className="flex-1 p-2 border border-gray-300 rounded-md resize-none"
+          className="flex-1 p-[11px] border border-hover rounded-md resize-none select-none focus:outline-none"
         />
         <button
           onClick={sendPrivateMessage}
-          className="bg-purple-500 text-white px-4 py-4 rounded-md hover:bg-purple-700"
+          className="bg-primary text-white h-12 w-12 rounded-md hover:bg-primary-dark transition flex items-center justify-center"
         >
-          <Icon icon="mdi:send" width={17} height={17} />
+          <Icon icon="mdi:send" className="size-6" />
         </button>
       </div>
     </div>
