@@ -20,7 +20,7 @@ export function LoginPage({
       />
       <button
         onClick={handleJoin}
-        className="w-full bg-green-500 text-white p-2 rounded-md hover:bg-green-700 mt-2"
+        className="w-full bg-primary text-white p-2 rounded-md hover:bg-primary-dark mt-2 transition"
       >
         Join
       </button>

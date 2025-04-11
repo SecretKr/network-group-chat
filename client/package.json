@@ -8,10 +8,12 @@
     "@iconify/react": "^5.2.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.1",
+    "clsx": "^2.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.2.0"
   },
   "scripts": {
     "dev": "react-scripts start",
