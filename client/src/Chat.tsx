@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
-import { Icon } from '@iconify/react';
+import { Icon } from "@iconify/react";
 
 type Message = {
   username?: string;
@@ -143,13 +143,17 @@ const Chat = () => {
                 <div
                   key={index}
                   className={`flex ${
-                    msg.username === userToChat ? "justify-start" : "justify-end"
+                    msg.username === userToChat
+                      ? "justify-start"
+                      : "justify-end"
                   }`}
                 >
                   <div
                     key={index}
                     className={`max-w-xs p-3 rounded-lg ${
-                      msg.username === userToChat ? "bg-gray-200" : "bg-blue-300"
+                      msg.username === userToChat
+                        ? "bg-gray-200"
+                        : "bg-blue-300"
                     }`}
                   >
                     {msg.message}
@@ -174,8 +178,7 @@ const Chat = () => {
             />
             <button
               onClick={sendPrivateMessage}
-              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-              disabled={!userToChat}
+              className="bg-purple-500 text-white px-4 py-4 rounded-md hover:bg-purple-700"
             >
               <Icon icon="mdi:send" width={17} height={17} />
             </button>
