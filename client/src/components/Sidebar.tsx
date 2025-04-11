@@ -15,7 +15,15 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <div className="w-1/4 border-r border-gray-300 bg-white p-4 overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4">Connected Users</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold mb-4">{username}</h2>
+        <button
+          className="bg-purple-500 text-white font-semibold p-2 rounded-md hover:bg-purple-700"
+        >
+          Create Chat Group
+        </button>
+      </div>
+      <h2 className="text-xl font-bold mb-4">Chat</h2>
       <ul className="space-y-2">
         {userList
           .filter((user) => user !== username)
