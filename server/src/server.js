@@ -34,6 +34,9 @@ const io = new Server(server, {
 app.get("/", (req, res) => {
   res.send("Hello, World! Server is running 🚀");
 });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy" });
+});
 
 let users = {};
 
