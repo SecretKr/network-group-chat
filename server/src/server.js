@@ -3,8 +3,11 @@ import express from "express";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
+import connectDB from "./database/db.js";
+import auth from "./routes/auth.js";
 
 dotenv.config();
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +19,9 @@ app.use(
     allowedHeaders: ["Content-Type"],
   })
 );
+
+app.use(express.json());
+app.use("/api/v1/auth", auth);
 
 const server = http.createServer(app);
 const io = new Server(server, {
