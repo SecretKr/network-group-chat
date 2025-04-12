@@ -1,0 +1,55 @@
+name: Build Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "server/**"
+
+  pull_request:
+    types:
+      - "opened"
+      - "edited"
+      - "reopened"
+      - "synchronize"
+    paths:
+      - "server/**"
+    branches:
+      - "main"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+          cache-dependency-path: "server/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: server
+
+      - name: Run dev server test
+        run: pnpm server
+        working-directory: server
+        env:
+          PORT: 3000
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRE: 30d
+          JWT_COOKIE_EXPIRE: 30
