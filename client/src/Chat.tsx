@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import io from "socket.io-client";
-import { LoginPage } from "./components/Login-Page";
+import { LoginRegisterPage } from "./components/Login-Register_Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
 
@@ -120,7 +120,7 @@ const Chat = () => {
 
   if (!loggedIn) {
     return (
-      <LoginPage
+      <LoginRegisterPage
         setUsername={setUsername}
         username={username}
         handleJoin={handleJoin}
