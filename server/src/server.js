@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./database/db.js";
 import auth from "./routes/auth.js";
+import chat from "./routes/chat.js";  
 
 dotenv.config();
 connectDB();
@@ -22,6 +23,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/v1/auth", auth);
+app.use("/api/v1/chat", chat);
 
 const server = http.createServer(app);
 const io = new Server(server, {
