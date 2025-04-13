@@ -3,6 +3,7 @@ import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
+import { useAuth } from "./auth/AuthContext";
 
 export type Message = {
   username?: string;
@@ -21,18 +22,11 @@ const Chat = () => {
   const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageMap>({});
-  const [username, setUsername] = useState<string>("");
   const [userList, setUserList] = useState<string[]>([]);
   const [userToChat, setUserToChat] = useState<string>("");
   const [selectedChat, setSelectedChat] = useState<boolean>(false);
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
-  const handleJoin = () => {
-    if (username.trim()) {
-      socket.emit("setUsername", username);
-      setLoggedIn(true);
-    }
-  };
+  const { uid, name, loggedIn } = useAuth();
 
   const handleUserToChat = (user: string) => {
     setUserToChat(user);
@@ -84,11 +78,17 @@ const Chat = () => {
     }
   };
 
+  useEffect(() => {
+    if (loggedIn && uid) {
+      socket.emit("setUsername", uid + ":" + name);
+    }
+  }, [loggedIn, uid, name, socket]);
+
   const getUnreadCount = (user: string) => messages[user]?.unread || 0;
 
   useEffect(() => {
     socket.on("userList", (users: string[]) => {
-      setUserList(users.filter((user) => user !== username));
+      setUserList(users.filter((user) => user.split(":")[0] !== uid));
     });
 
     socket.on("receiveMessage", (data) => {
@@ -116,23 +116,17 @@ const Chat = () => {
       socket.off("userList");
       socket.off("receiveMessage");
     };
-  }, [socket, username, userToChat]);
+  }, [socket, uid, userToChat]);
 
   if (!loggedIn) {
-    return (
-      <LoginPage
-        setUsername={setUsername}
-        username={username}
-        handleJoin={handleJoin}
-      />
-    );
+    return <LoginPage />;
   }
 
   return (
     <div className="w-screen h-screen flex bg-white">
       <Sidebar
         userList={userList}
-        username={username}
+        username={name}
         setUserToChat={handleUserToChat}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
