@@ -28,7 +28,7 @@ export function Chatbox({
           <Icon icon="weui:back-filled" width="12" height="24" />
           <p className="text-xl">Back</p>
         </div>
-        <h1 className="text-2xl font-bold mb-4">{userToChat}</h1>
+        <h1 className="text-2xl font-bold mb-4">{userToChat?.split(":")[1]}</h1>
       </div>
 
       {userToChat && (

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Chat from "./Chat";
+import { ToastContainer } from "react-toastify";
+import { AuthProvider } from "./auth/AuthContext";
 
 const App = () => {
   const [serverReady, setServerReady] = useState(false);
@@ -25,7 +27,9 @@ const App = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       {serverReady ? (
-        <Chat />
+        <AuthProvider>
+          <Chat />
+        </AuthProvider>
       ) : (
         <div className="flex flex-col items-center">
           <div className="loader mb-4" />
@@ -34,6 +38,7 @@ const App = () => {
           </p>
         </div>
       )}
+      <ToastContainer position="bottom-right" hideProgressBar={true} />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { useAuth } from "../auth/AuthContext";
 import { cn } from "../utils/utils";
 
 interface SidebarProps {
@@ -15,6 +16,8 @@ export function Sidebar({
   userToChat,
   getUnreadCount,
 }: SidebarProps) {
+  const { logout } = useAuth();
+
   return (
     <div
       className={
@@ -23,9 +26,17 @@ export function Sidebar({
         ) + (userToChat && " hidden")
       }
     >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">{username}</h2>
-        <button className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition">
+      <div className="p-2">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">{username}</h2>
+          <button
+            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold p-2 rounded-md transition"
+            onClick={logout}
+          >
+            Logout
+          </button>
+        </div>
+        <button className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition">
           Create Chat Group
         </button>
       </div>
@@ -43,9 +54,7 @@ export function Sidebar({
                   : "bg-white hover:bg-hover"
               }`}
             >
-              <p className="w-full items-center flex">
-                {user === username ? `${user} (You)` : user}
-              </p>
+              <p className="w-full items-center flex">{user.split(":")[1]}</p>
               {getUnreadCount(user) > 0 && (
                 <p className="p-2 bg-accent text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
                   {getUnreadCount(user)}
