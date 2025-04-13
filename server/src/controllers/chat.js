@@ -1,5 +1,6 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
+import Message from "../models/Message.js";
 
 export const getChats = async (req, res) => {
   try {
@@ -162,3 +163,26 @@ export const deleteChat = async (req, res) => {
     res.status(500).json({ success: false, msg: "Server Error" });
   }
 };
+
+export const getMessagesChat = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id);
+    if (!chat) {
+      return res.status(404).json({ success: false, msg: "Chat not found" });
+    }
+    if(!chat.users.includes(req.user._id.toString())){
+      return res.status(403).json({ success: false, msg: "Unauthorized" });
+    }
+
+    const messages = await Message.find({ chatID: req.params.id })
+      .sort({ createdAt: 1 });
+
+    if (!messages) {
+      return res.status(404).json({ success: false, msg: "Messages not found" });
+    }
+
+      res.status(200).json(messages);
+  } catch (err) {
+      res.status(500).json({ success: false, msg: "Server Error" });
+  }
+}
