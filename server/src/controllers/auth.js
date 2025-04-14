@@ -1,10 +1,10 @@
 import User from "../models/User.js";
 
 const sendTokenResponse = (user, statusCode, res) => {
-  //create token
+  // Create token
   const token = user.getSignedJwtToken();
 
-  const options = {
+  const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
     ),
@@ -12,13 +12,13 @@ const sendTokenResponse = (user, statusCode, res) => {
   };
 
   if (process.env.NODE_ENV === "production") {
-    options.secure = true;
+    cookieOptions.secure = true;
   }
 
   res
     .status(statusCode)
-    // .cookie("token", token, options)
-    .json({ success: true, _id: user._id, name: user.nickname, token });
+    // .cookie("token", token, cookieOptions)
+    .json({ success: true, id: user._id, nickname: user.nickname, token });
 };
 
 // @desc    Register a user
@@ -28,22 +28,22 @@ export const register = async (req, res, next) => {
   try {
     const { nickname, username, password } = req.body;
 
-    //create user
-    const user = await User.create({
+    // Create user
+    const newUser = await User.create({
       nickname,
       username,
       password,
     });
 
-    sendTokenResponse(user, 200, res);
-  } catch (err) {
-    if (err.code === 11000) {
+    sendTokenResponse(newUser, 200, res);
+  } catch (error) {
+    if (error.code === 11000) {
       return res
         .status(400)
-        .json({ success: false, msg: "Username already exists" });
+        .json({ success: false, message: "Username already exists" });
     }
     res.status(400).json({ success: false });
-    console.log(err.stack);
+    console.log(error.stack);
   }
 };
 
@@ -54,51 +54,55 @@ export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
-    //validate
+    // Validate input
     if (!username || !password) {
       return res
         .status(400)
         .json({
           success: false,
-          msg: "Please provide an username and password",
+          message: "Please provide a username and password",
         });
     }
-    //check for user
-    const user = await User.findOne({ username }).select("+password");
 
-    if (!user) {
-      return res.status(401).json({ success: false, msg: "False Username" });
+    // Check for user
+    const existingUser = await User.findOne({ username }).select("+password");
+
+    if (!existingUser) {
+      return res.status(401).json({ success: false, message: "Invalid username" });
     }
 
-    //check if password match
-    const isMatch = await user.matchPassword(password);
+    // Check if password matches
+    const isPasswordMatch = await existingUser.matchPassword(password);
 
-    if (!isMatch) {
-      return res.status(401).json({ success: false, msg: "False Password" });
+    if (!isPasswordMatch) {
+      return res.status(401).json({ success: false, message: "Invalid password" });
     }
 
-    sendTokenResponse(user, 200, res);
-  } catch (err) {
+    sendTokenResponse(existingUser, 200, res);
+  } catch (error) {
     res
       .status(401)
       .json({
         success: false,
-        msg: "Cannot convert email or password to string",
+        message: "Cannot convert username or password to string",
       });
   }
 };
 
-// @desc    Get current logged in user
+// @desc    Get current logged-in user
 // @route   POST /api/v1/auth/me
 // @access  Private
 export const getMe = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+  const currentUser = await User.findById(req.user.id);
   res.status(200).json({
     success: true,
-    data: user,
+    data: currentUser,
   });
 };
 
+// @desc    Logout user
+// @route   POST /api/v1/auth/logout
+// @access  Private
 export const logout = async (req, res, next) => {
   res.cookie("token", "none", {
     expires: new Date(Date.now() + 10 * 1000),

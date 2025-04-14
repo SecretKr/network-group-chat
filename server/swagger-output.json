@@ -470,7 +470,7 @@
                 "chatId": {
                   "example": "any"
                 },
-                "message": {
+                "text": {
                   "example": "any"
                 }
               }
@@ -550,7 +550,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "message": {
+                "text": {
                   "example": "any"
                 }
               }
