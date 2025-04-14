@@ -364,6 +364,226 @@ export type PutApiV1ChatByIdResponses = {
     200: unknown;
 };
 
+export type GetApiV1ChatByIdMessageschatData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/chat/{id}/messageschat';
+};
+
+export type GetApiV1ChatByIdMessageschatErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type GetApiV1ChatByIdMessageschatResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetApiV1MessageData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/';
+};
+
+export type GetApiV1MessageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type GetApiV1MessageResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type PostApiV1MessageData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/';
+};
+
+export type PostApiV1MessageErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type PostApiV1MessageResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type DeleteApiV1MessageByIdData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/message/{id}';
+};
+
+export type DeleteApiV1MessageByIdErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type DeleteApiV1MessageByIdResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetApiV1MessageByIdData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/message/{id}';
+};
+
+export type GetApiV1MessageByIdErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type GetApiV1MessageByIdResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type PutApiV1MessageByIdData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/message/{id}';
+};
+
+export type PutApiV1MessageByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type PutApiV1MessageByIdResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type ClientOptions = {
     baseUrl: 'http://localhost:3000/' | (string & {});
 };
