@@ -34,9 +34,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getUserFromCookies = useCallback(() => {
     const user = getUserFromCookie();
-    if (user?._id) {
-      setUid(user._id);
-      setName(user.name);
+    if (user?.id) {
+      setUid(user.id);
+      setName(user.nickname);
       setLoggedIn(true);
       //socket.emit("setUsername", user._id); TODO -------------------------------------------------------------------------
     }
@@ -47,18 +47,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [getUserFromCookies]);
 
   const login = (user: UserData) => {
-    setUid(user._id);
-    setName(user.name);
+    setUid(user.id);
+    setName(user.nickname);
     setToken(user.token);
     setLoggedIn(true);
     saveUserToCookie(user);
+
+    //
+    console.log("from AuthContext, in login function, name: " + user.nickname);
+    //
   };
 
   const logout = () => {
-    removeUserCookie();
     setUid("");
     setName("");
     setLoggedIn(false);
+    removeUserCookie();
   };
 
   return (

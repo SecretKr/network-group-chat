@@ -3,7 +3,9 @@ import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
+import { toast } from "react-toastify";
 import { useAuth } from "./auth/AuthContext";
+import { postApiV1Chat, postApiV1Message } from "./generated/api";
 
 export type Message = {
   username?: string;
@@ -28,9 +30,16 @@ const Chat = () => {
 
   const { uid, name, loggedIn } = useAuth();
 
-  const handleUserToChat = (user: string) => {
+  //
+  console.log(uid);
+  console.log(name);
+  console.log(loggedIn);
+  //
+
+  const handleUserToChat = async (user: string) => {
     setUserToChat(user);
     setSelectedChat(true);
+
     setMessages((prev) => {
       const existing = prev[user] || { messages: [], unread: 0 };
       return {
@@ -43,6 +52,31 @@ const Chat = () => {
         },
       };
     });
+
+    // If the private chat is already created,
+    // If the private chat is not created yet,
+    const token = localStorage.getItem("token");
+    console.log("Token: " + token)
+    try {
+      const response = await postApiV1Chat({
+        body: {
+          userId: user.split(":")[0]
+        } as any,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.data) {
+        console.log("Chat created: ", response);
+      }
+      else {
+        console.log("Error creating chat:", response);
+      }
+    } catch (error) {
+      console.error("Error creating chat:", error);
+    }
+    // Get messages
+    //
   };
 
   const handleBack = () => {
@@ -58,6 +92,7 @@ const Chat = () => {
       };
 
       console.log("Sending message:", newMessage, userToChat);
+
       socket.emit("sendMessage", {
         targetUser: userToChat,
         message,
