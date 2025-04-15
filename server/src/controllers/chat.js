@@ -170,7 +170,7 @@ export const getMessagesChat = async (req, res) => {
       return res.status(403).json({ success: false, msg: "Unauthorized" });
     }
 
-    const chatMessages = await Message.find({ chatID: req.params.id })
+    const chatMessages = await Message.find({ chatId: req.params.id })
       .sort({ createdAt: 1 });
 
     if (!chatMessages) {
