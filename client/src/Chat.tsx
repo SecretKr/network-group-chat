@@ -5,7 +5,8 @@ import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
 import { toast } from "react-toastify";
 import { useAuth } from "./auth/AuthContext";
-import { postApiV1Chat, postApiV1Message } from "./generated/api";
+import { createPrivateChat, getPrivateChats, Chat } from "./utils/privateChat";
+import { createMessage, getMessagesByChatId } from "./utils/message";
 
 export type Message = {
   username?: string;
@@ -20,15 +21,16 @@ export type MessageMap = {
   };
 };
 
-const Chat = () => {
+const MainPage = () => {
   const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageMap>({});
   const [userList, setUserList] = useState<string[]>([]);
   const [userToChat, setUserToChat] = useState<string>("");
+  const [chatId, setChatId] = useState<string>("");
   const [selectedChat, setSelectedChat] = useState<boolean>(false);
 
-  const { uid, name, loggedIn } = useAuth();
+  const { uid, name, token, loggedIn } = useAuth();
 
   //
   console.log(uid);
@@ -40,43 +42,74 @@ const Chat = () => {
     setUserToChat(user);
     setSelectedChat(true);
 
-    setMessages((prev) => {
-      const existing = prev[user] || { messages: [], unread: 0 };
-      return {
-        ...prev,
-        [user]: {
-          messages: existing.messages.map((msg) =>
-            msg.username === user ? { ...msg, read: true } : msg
-          ),
-          unread: 0,
-        },
-      };
-    });
-
-    // If the private chat is already created,
-    // If the private chat is not created yet,
-    const token = localStorage.getItem("token");
-    console.log("Token: " + token)
-    try {
-      const response = await postApiV1Chat({
-        body: {
-          userId: user.split(":")[0]
-        } as any,
-        headers: {
-          Authorization: `Bearer ${token}`
+    const chats: Chat[] | null = await getPrivateChats(token);
+    var created = false;
+    var chatId_local: string = "";
+    if (chats) {
+      for (const chat of chats) {
+        for (const u of chat.users) {
+          if (u._id === user.split(":")[0]) {
+            created = true;
+            setChatId(chat._id);
+            chatId_local = chat._id;
+            break;
+          }
         }
-      });
-      if (response.data) {
-        console.log("Chat created: ", response);
+        if (created) break;
       }
-      else {
-        console.log("Error creating chat:", response);
+      if (created) {
+        toast.success("Join private chat successfully");
+      } else {
+        const res = await createPrivateChat(user, token);
+        if (res) {
+          toast.success("Create private chat successfully");
+        } else {
+          toast.error("Something went wrong");
+        }
       }
-    } catch (error) {
-      console.error("Error creating chat:", error);
+    } else {
+      const res = await createPrivateChat(user, token);
+      if (res) {
+        toast.success("Create private chat successfully");
+      } else {
+        toast.error("Something went wrong");
+      }
+      const chats: Chat[] | null = await getPrivateChats(token);
+      var got = false;
+      if (chats) {
+        for (const chat of chats) {
+          for (const u of chat.users) {
+            if (u._id === user.split(":")[0]) {
+              got = true;
+              setChatId(chat._id);
+              chatId_local = chat._id;
+              break;
+            }
+          }
+          if (got) break;
+        }
+      }
     }
-    // Get messages
-    //
+
+    const messageHistory = await getMessagesByChatId(chatId_local, token);
+    if (messageHistory) {
+      for (let i = 0; i < messageHistory.length; i++) {
+        if (messageHistory[i].username === uid) {
+          messageHistory[i].username = messageHistory[i].username + `:${name}`
+        } else {
+          messageHistory[i].username = user
+        }
+      }
+      setMessages((prev) => {
+        return {
+          ...prev,
+          [user]: {
+            messages: messageHistory,
+            unread: 0,
+          },
+        };
+      });
+    }
   };
 
   const handleBack = () => {
@@ -84,7 +117,7 @@ const Chat = () => {
     setSelectedChat(false);
   };
 
-  const sendPrivateMessage = () => {
+  const sendPrivateMessage = async () => {
     if (userToChat && message.trim()) {
       const newMessage: Message = {
         message,
@@ -108,6 +141,13 @@ const Chat = () => {
           },
         };
       });
+
+      const res = await createMessage(chatId, message, token);
+      if (res) {
+        toast.success("Create message successfully");
+      } else {
+        toast.error("Something went wrong");
+      }
 
       setMessage("");
     }
@@ -181,4 +221,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default MainPage;
