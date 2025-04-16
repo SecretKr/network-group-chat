@@ -9,13 +9,18 @@ const swaggerDocument = JSON.parse(fs.readFileSync("./swagger-output.json"));
 import connectDB from "./database/db.js";
 import auth from "./routes/auth.js";
 import chat from "./routes/chat.js";
-import message from "./routes/message.js";
+import Message from "./models/Message.js";
+import message from './routes/message.js'; 
+import Chat from "./models/Chat.js"; 
+// D:\Third year of Engineering\Network\2\network-group-chat\server\src\models\Message.js
 
 dotenv.config();
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const users = {};
+const userIdBySocket ={};
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(
@@ -45,10 +50,11 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "Server is healthy" });
 });
 
-let users = {};
-
 function getSocketIdByUsername(username) {
-  return Object.keys(users).find((key) => users[key] === username);
+  return Object.keys(users).find((key) => userIdBySocket[key] === username);
+}
+function getSocketIdByUserId(uid) {
+  return Object.keys(users).find((key) => users[key] === uid);
 }
 
 function getUserList() {
@@ -59,25 +65,69 @@ function getUserList() {
 io.on("connection", (socket) => {
   console.log("A connection has been made");
 
-  socket.on("setUsername", (username) => {
-    const existingSocketId = getSocketIdByUsername(username);
+  socket.on("setUsername", (data) => {
+    const [uid, username] = data.split(":");
+    const existingSocketId = getSocketIdByUserId(uid);
+
     if (existingSocketId) {
       delete users[existingSocketId];
+      delete userIdBySocket[existingSocketId];
     }
-
     users[socket.id] = username;
-    console.log(`${username} has joined.`);
+    userIdBySocket[socket.id] = uid;
+    console.log(`${uid} has joined.`);
+    console.log(userIdBySocket);
     io.emit("userList", getUserList());
   });
 
-  socket.on("sendMessage", (data) => {
-    const { targetUser, message } = data;
-    const targetSocketId = getSocketIdByUsername(targetUser);
-    if (targetSocketId) {
-      io.to(targetSocketId).emit("receiveMessage", {
-        username: users[socket.id],
-        message,
+  socket.on("sendMessage", async (data) => {
+    const { chatId, text } = data;
+    const senderId = userIdBySocket[socket.id];
+    console.log("FF")
+    console.log(chatId, text,senderId);
+    if (!senderId || !chatId || !text) {
+      console.error("❌ Missing required fields in message payload");
+      return;
+    }
+  
+    try {
+      // Save message to DB
+      const savedMessage = await Message.create({
+        senderId,
+        chatId,
+        text,
       });
+  
+      // Get chat members from DB
+      const chat = await Chat.findById(chatId).populate("users");
+  
+      if (!chat) {
+        console.error("❌ Chat not found for chatId:", chatId);
+        return;
+      }
+  
+      // Emit message to all members in chat
+      for (const user of chat.users) {
+        const targetSocketId = socketIdByUserId[user._id.toString()];
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("receiveMessage", {
+            text,
+            senderId,
+            chatId,
+            createdAt: savedMessage.createdAt,
+          });
+        }
+      }
+  
+      // Optionally emit back to sender (in case they aren't in the user list)
+      socket.emit("receiveMessage", {
+        text,
+        senderId,
+        chatId,
+        createdAt: savedMessage.createdAt,
+      });
+    } catch (err) {
+      console.error("❌ Error saving or emitting message:", err.message);
     }
   });
 

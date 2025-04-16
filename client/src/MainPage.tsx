@@ -93,15 +93,15 @@ const MainPage = () => {
 
   const sendPrivateMessage = async () => {
     if (!userToChat || !message.trim()) return;
-
+    console.log("Sending message:", message, userToChat);
     const newMessage: Message = {
       message,
       read: false,
     };
 
     socket.emit("sendMessage", {
-      targetUser: userToChat,
-      message,
+      chatId: chatId,
+      text: message,
     });
 
     setMessages((prev) => {
@@ -157,6 +157,7 @@ const MainPage = () => {
   useEffect(() => {
     if (loggedIn && uid) {
       socket.emit("setUsername", `${uid}:${name}`);
+      console.log("Socket connection established with UID:", uid);
     }
   }, [loggedIn, uid, name, socket]);
 
@@ -221,6 +222,8 @@ const MainPage = () => {
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
       />
+      <button className="flex w-10 h-10 bg-red-500" onClick={sendPrivateMessage}> test
+      </button>
       {selectedChat && (
         <Chatbox
           handleBack={handleBack}
