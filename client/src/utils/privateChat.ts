@@ -15,7 +15,10 @@ export interface Chat {
   _id: string;
 }
 
-export const createPrivateChat = async (user: string, token: string): Promise<boolean> => {
+export const createPrivateChat = async (
+  user: string,
+  token: string
+): Promise<boolean> => {
   const userId = user.split(":")[0];
 
   if (!token || !user) return false;
@@ -43,23 +46,29 @@ export const createPrivateChat = async (user: string, token: string): Promise<bo
   }
 };
 
-export const getPrivateChats = async (token: string): Promise<Chat[] | null> => {
+export const getPrivateChats = async (
+  token: string
+): Promise<Chat[] | null> => {
   if (!token) return null;
 
   try {
+    console.log("Getting chats...");
     const res = await getApiV1Chat({
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
+    const chats: Chat[] = [];
+    if (res.response.status === 404) {
+      return chats;
+    }
+
     if (!res.data) {
       console.error("Error getting chats:", res);
       return null;
     }
 
-    console.log("Got chats: ", res);
-    const chats: Chat[] = [];
     const data: any = res.data;
     for (const chat of data) {
       chats.push({

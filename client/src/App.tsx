@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import MainPage from "./Chat";
+import MainPage from "./MainPage";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./auth/AuthContext";
 
