@@ -1,8 +1,9 @@
 import { useAuth } from "../auth/AuthContext";
+import { UserWithStatus } from "../MainPage";
 import { cn } from "../utils/utils";
 
 interface SidebarProps {
-  userList: string[];
+  userList: UserWithStatus[];
   username: string;
   setUserToChat: (user: string) => void;
   userToChat: string;
@@ -17,6 +18,9 @@ export function Sidebar({
   getUnreadCount,
 }: SidebarProps) {
   const { logout } = useAuth();
+  const sortedUserList = [...userList].sort((a, b) =>
+    a.online === b.online ? 0 : a.online ? -1 : 1
+  );
 
   return (
     <div
@@ -42,22 +46,29 @@ export function Sidebar({
       </div>
       <h2 className="text-2xl font-bold mb-4 text-center">Direct Chat</h2>
       <ul className="rounded-lg overflow-hidden divide-y divide-hover">
-        {userList
-          .filter((user) => user !== username)
+        {sortedUserList
+          .filter((user) => user.username !== username)
           .map((user, index) => (
             <li
               key={index}
-              onClick={() => setUserToChat(user)}
-              className={`cursor-pointer p-2 pl-4 flex h-12 justify-center items-center transition ${
-                userToChat === user
+              onClick={() => setUserToChat(user.username)}
+              className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition ${
+                userToChat === user.username
                   ? "bg-primary-light"
                   : "bg-white hover:bg-hover"
               }`}
             >
-              <p className="w-full items-center flex">{user.split(":")[1]}</p>
-              {getUnreadCount(user) > 0 && (
+              <div className="flex items-center gap-2 w-full">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    user.online ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                ></span>
+                <p>{user.username.split(":")[1]}</p>
+              </div>
+              {getUnreadCount(user.username) > 0 && (
                 <p className="p-2 bg-accent text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                  {getUnreadCount(user)}
+                  {getUnreadCount(user.username)}
                 </p>
               )}
             </li>

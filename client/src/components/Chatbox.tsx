@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { MessageMap } from "../Chat";
+import { MessageMap } from "../MainPage";
 
 interface ChatboxProps {
   handleBack: () => void;
@@ -8,6 +8,7 @@ interface ChatboxProps {
   setMessage: (message: string) => void;
   message: string;
   sendPrivateMessage: () => void;
+  onlineStatus?: boolean;
 }
 
 export function Chatbox({
@@ -17,6 +18,7 @@ export function Chatbox({
   setMessage,
   message,
   sendPrivateMessage,
+  onlineStatus = false,
 }: ChatboxProps) {
   return (
     <div className="flex-1 flex flex-col p-6 bg-background">
@@ -28,7 +30,19 @@ export function Chatbox({
           <Icon icon="weui:back-filled" width="12" height="24" />
           <p className="text-xl">Back</p>
         </div>
-        <h1 className="text-2xl font-bold mb-4">{userToChat?.split(":")[1]}</h1>
+        <div className="flex items-center justify-center mb-4 gap-4">
+          <h1 className="text-2xl font-bold">{userToChat?.split(":")[1]}</h1>
+          {userToChat && (
+            <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  onlineStatus ? "bg-green-500" : "bg-gray-400"
+                }`}
+              ></span>
+              <span>{onlineStatus ? "Online" : "Offline"}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {userToChat && (

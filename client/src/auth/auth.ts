@@ -2,8 +2,8 @@ import Cookies from "js-cookie";
 
 export interface UserData {
   success: boolean;
-  _id: string;
-  name: string;
+  id: string;
+  nickname: string;
   token: string;
 }
 

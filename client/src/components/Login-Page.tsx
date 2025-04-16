@@ -30,8 +30,14 @@ export function LoginPage() {
         return;
       }
 
+      //
+      console.log("from Login-Page, user data: " + data);
+      console.log(data);
+      //
+
       login(data as UserData);
-      toast.success("Login successful!");
+
+      toast.success("Login successfully");
     } else {
       const { response, data } = await postApiV1AuthRegister({
         body: {

@@ -22,7 +22,7 @@ app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
@@ -52,6 +52,7 @@ function getSocketIdByUsername(username) {
 }
 
 function getUserList() {
+  console.log("Users: ", users);
   return Object.values(users);
 }
 
@@ -59,6 +60,11 @@ io.on("connection", (socket) => {
   console.log("A connection has been made");
 
   socket.on("setUsername", (username) => {
+    const existingSocketId = getSocketIdByUsername(username);
+    if (existingSocketId) {
+      delete users[existingSocketId];
+    }
+
     users[socket.id] = username;
     console.log(`${username} has joined.`);
     io.emit("userList", getUserList());
