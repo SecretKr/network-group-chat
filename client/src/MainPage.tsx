@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
+import { Popup } from "./components/Popup"; 
 import { useAuth } from "./auth/AuthContext";
 import { createPrivateChat, getPrivateChats } from "./utils/privateChat";
 import { createMessage, getMessagesByChatId } from "./utils/message";
@@ -35,6 +36,7 @@ const MainPage = () => {
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
+  const [shownPopup, setShownPopup] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
@@ -209,6 +211,9 @@ const MainPage = () => {
   const getUnreadCount = (user: string) => messages[user]?.unread || 0;
   const chatUserObj = userList.find((u) => u.username === userToChat);
   const onlineStatus = chatUserObj?.online;
+  const showPopup = () => {
+    setShownPopup(true);
+  };
 
   if (!loggedIn) return <LoginPage />;
 
@@ -220,7 +225,15 @@ const MainPage = () => {
         setUserToChat={handleUserToChat}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
+        showPopup={showPopup}
       />
+      {shownPopup && (
+        <Popup 
+          userList={userList}
+          username={name}
+          onClose={() => setShownPopup(false)} 
+        />
+      )}
       {selectedChat && (
         <Chatbox
           handleBack={handleBack}
