@@ -180,6 +180,7 @@ const MainPage = () => {
     });
 
     socket.on("receiveMessage", (data) => {
+      console.log("Received message:", data);
       const fromUser = data.username;
       const isActiveChat = fromUser === userToChat;
 
