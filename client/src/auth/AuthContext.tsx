@@ -37,8 +37,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (user?.id) {
       setUid(user.id);
       setName(user.nickname);
+      setToken(user.token);
       setLoggedIn(true);
-      //socket.emit("setUsername", user._id); TODO -------------------------------------------------------------------------
     }
   }, []);
 
