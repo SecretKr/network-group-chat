@@ -137,7 +137,6 @@ const MainPage = () => {
       });
 
       setUserList((prev) => {
-        // Preserve online status if available, otherwise default to offline
         const updatedList: UserWithStatus[] = Array.from(chatUsers).map((u) => {
           const existing = prev.find((prevU) => prevU.username === u);
           return {
@@ -212,6 +211,46 @@ const MainPage = () => {
   const chatUserObj = userList.find((u) => u.username === userToChat);
   const onlineStatus = chatUserObj?.online;
 
+const handleCreateChat = () => {
+  const memberUIDs = userList.map((user) => {
+    const uid = user.username.split(":")[0];
+    console.log(`🔍 Extracted UID: ${uid} from ${user.username}`);
+    return uid;
+  });
+
+  console.log("👥 Member UIDs for group chat:", memberUIDs);
+
+  if (!uid || !name) {
+    console.error("❌ Missing current user ID or name", { uid, name });
+    toast.error("User info missing");
+    return;
+  }
+
+  if (memberUIDs.length === 0) {
+    console.warn("⚠️ No members to create group chat with");
+    toast.error("No members selected");
+    return;
+  }
+
+  const payload = {
+    chatName: `${name}'s Group`,
+    isGroupChat: true,
+    members: memberUIDs,
+  };
+
+  console.log("📦 Emitting 'createChat' with payload:", payload);
+
+  socket.emit("createChat", payload, (response: any) => {
+    console.log("Server Response:", response);
+  });
+
+  toast.success("Group chat creation requested");
+};
+
+socket.on("chatListUpdate", (userChats) => {
+  console.log("🔔 Received updated chat list:", userChats);
+});
+
   if (!loggedIn) return <LoginPage />;
 
   return (
@@ -223,7 +262,8 @@ const MainPage = () => {
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
       />
-      <button className="flex w-10 h-10 bg-red-500" onClick={sendPrivateMessage}> test
+      <button className="flex w-10 h-10 bg-red-500" onClick={handleCreateChat}>
+        createchat
       </button>
       {selectedChat && (
         <Chatbox

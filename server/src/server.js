@@ -83,6 +83,50 @@ io.on("connection", (socket) => {
     io.emit("userList", getOnlineUserList());
   });
 
+socket.on("createChat", async (data) => {
+  const { chatName, isGroupChat, members } = data;
+  const creatorId = socketIdToUserId[socket.id];
+
+  console.log("📨 Incoming createChat:", chatName, isGroupChat, members);
+
+  if (!creatorId || !chatName || !Array.isArray(members) || members.length < 1) {
+    console.error("❌ Invalid group chat creation payload");
+    return;
+  }
+
+  if (!members.includes(creatorId)) {
+    members.push(creatorId);
+  }
+
+  try {
+    const newChat = await ChatModel.create({
+      chatName,
+      isGroupChat,
+      users: members,
+    });
+
+    for (const userId of members) {
+      const targetSocketId = getSocketIdByUserId(userId); 
+      if (targetSocketId) {
+        try {
+          const userChats = await ChatModel.find({ users: userId }).populate("users", "_id username");
+          console.log("userchat",targetSocketId);
+          io.to(targetSocketId).emit("chatListUpdate", userChats);
+        } catch (err) {
+          console.error(`❌ Error fetching chats for UID ${userId}:`, err.message);
+        }
+      } else {
+        console.warn(`⚠️ No active socket for UID ${userId}`);
+      }
+    }
+
+    console.log(`✅ Chat "${chatName}" created successfully`);
+  } catch (err) {
+    console.error("❌ Failed to create chat:", err.message);
+  }
+});
+
+
   socket.on("sendMessage", async (data) => {
     let { chatId, text } = data;
     text += "socket";
