@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import { MessageMap, UserWithStatus } from "../MainPage";
+import { useEffect, useRef } from "react";
 
 interface ChatboxProps {
   handleBack: () => void;
@@ -20,6 +21,12 @@ export function Chatbox({
   sendPrivateMessage,
   chatUserObj,
 }: ChatboxProps) {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView();
+  }, [messages, userToChat]);
+
   return (
     <div className="flex-1 flex flex-col p-6 bg-background">
       <div className="text-center relative">
@@ -68,6 +75,7 @@ export function Chatbox({
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
       )}
 
