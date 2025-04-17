@@ -326,9 +326,11 @@ export const getMessagesChat = async (req, res) => {
       return res.status(403).json({ success: false, msg: "Unauthorized" });
     }
 
-    const chatMessages = await Message.find({ chatId: req.params.id }).sort({
-      createdAt: 1,
-    });
+    const chatMessages = await Message.find({ chatId: req.params.id })
+      .sort({
+        createdAt: 1,
+      })
+      .populate("senderId", sanitizeUsers);
 
     res.status(200).json(chatMessages);
   } catch (err) {

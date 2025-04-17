@@ -65,7 +65,8 @@ export const getMessagesByChatId = async (
     const data: any = res.data;
     for (const message of data) {
       messages.push({
-        username: message.senderId,
+        uid: message.senderId._id,
+        username: message.senderId.username,
         message: message.text,
         read: false,
       });

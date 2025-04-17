@@ -97,22 +97,21 @@ export function Chatbox({
             <div
               key={index}
               className={`flex ${
-                msg.username !== uid ? "justify-start" : "justify-end"
+                msg.uid !== uid ? "justify-start" : "justify-end"
               }`}
             >
               <div
                 key={index}
                 className={`max-w-xs p-3 rounded-lg break-words relative mt-3 ${
-                  msg.username !== uid ? "bg-gray-200" : "bg-primary-light"
+                  msg.uid !== uid ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >
                 <p
                   className={`absolute text-sm text-gray-400 -top-5 ${
-                    msg.uid === userToChat ? " left-1" : "right-1"
+                    msg.uid !== uid ? " left-1" : "right-1"
                   }`}
                 >
                   {msg.username}
-                  {/* TODO change uid to username */}
                 </p>
                 {msg.message}
               </div>

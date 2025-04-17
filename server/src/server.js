@@ -166,7 +166,7 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async (data) => {
     let { chatId, text } = data;
-    text += " socket";
+    //text += " socket";
     const senderId = socketIdToUserId[socket.id];
     console.log(senderId, chatId, text);
     if (!senderId || !chatId || !text) {
@@ -193,12 +193,21 @@ io.on("connection", (socket) => {
       for (const user of chat.users) {
         const targetSocketId = getSocketIdByUserId(user._id.toString());
         if (targetSocketId) {
-          io.to(targetSocketId).emit("receiveMessage", {
-            text,
-            senderId,
-            chatId,
-            createdAt: savedMessage.createdAt,
-          });
+          if (chat.isGroupChat) {
+            io.to(targetSocketId).emit("receiveGroupMessage", {
+              text,
+              senderId,
+              chatId,
+              createdAt: savedMessage.createdAt,
+            });
+          } else {
+            io.to(targetSocketId).emit("receiveMessage", {
+              text,
+              senderId,
+              chatId,
+              createdAt: savedMessage.createdAt,
+            });
+          }
         }
       }
 
