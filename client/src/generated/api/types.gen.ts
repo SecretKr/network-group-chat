@@ -114,6 +114,10 @@ export type GetApiV1ChatErrors = {
      */
     401: unknown;
     /**
+     * Not Found
+     */
+    404: unknown;
+    /**
      * Internal Server Error
      */
     500: unknown;
@@ -149,6 +153,10 @@ export type PostApiV1ChatErrors = {
      * Not Found
      */
     404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
     /**
      * Internal Server Error
      */
@@ -222,6 +230,27 @@ export type PostApiV1ChatGroupResponses = {
     200: unknown;
 };
 
+export type GetApiV1ChatGroupAllData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/chat/group/all';
+};
+
+export type GetApiV1ChatGroupAllErrors = {
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type GetApiV1ChatGroupAllResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type PutApiV1ChatGroupAddData = {
     body?: never;
     headers?: {
@@ -276,6 +305,10 @@ export type DeleteApiV1ChatByIdErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: unknown;
@@ -309,6 +342,10 @@ export type GetApiV1ChatByIdErrors = {
      * Unauthorized
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
     /**
      * Not Found
      */
@@ -348,6 +385,10 @@ export type PutApiV1ChatByIdErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: unknown;
@@ -362,6 +403,25 @@ export type PutApiV1ChatByIdResponses = {
      * OK
      */
     200: unknown;
+};
+
+export type PutApiV1ChatByIdLeaveData = {
+    body?: never;
+    headers?: {
+        authorization?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/chat/{id}/leave';
+};
+
+export type PutApiV1ChatByIdLeaveErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
 };
 
 export type GetApiV1ChatByIdMessageschatData = {

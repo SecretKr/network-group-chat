@@ -24,12 +24,36 @@ export const getChats = async (req, res) => {
   }
 };
 
+export const getAllGroupChats = async (req, res) => {
+  try {
+    const groupChats = await Chat.find({
+      isGroupChat: true,
+    })
+      .populate("users", sanitizeUsers)
+      .populate({
+        path: "groupOwner",
+        select: sanitizeUsers,
+      });
+
+    res.status(200).json(groupChats);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, msg: "Failed to get all group chats" });
+  }
+};
+
 export const getGroupChats = async (req, res) => {
   try {
     const groupChats = await Chat.find({
       users: req.user._id,
       isGroupChat: true,
-    }).populate("users", sanitizeUsers);
+    })
+      .populate("users", sanitizeUsers)
+      .populate({
+        path: "groupOwner",
+        select: sanitizeUsers,
+      });
 
     res.status(200).json(groupChats);
   } catch (err) {
@@ -234,6 +258,48 @@ export const deleteChat = async (req, res) => {
     res.status(200).json({ success: true, msg: "Chat deleted successfully" });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Failed to delete chat" });
+  }
+};
+
+export const leaveChat = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id);
+
+    if (!chat) {
+      return res.status(404).json({ success: false, msg: "Chat not found" });
+    }
+
+    // Check if user is part of this chat
+    if (!chat.users.includes(req.user._id)) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "You are not part of this chat" });
+    }
+
+    // If user is the group owner, delete the entire chat
+    if (
+      chat.isGroupChat &&
+      chat.groupOwner?.toString() === req.user._id.toString()
+    ) {
+      await chat.deleteOne();
+      return res
+        .status(200)
+        .json({ success: true, msg: "Group chat deleted because owner left" });
+    }
+
+    // Otherwise, just remove user from the chat
+    chat.users = chat.users.filter(
+      (userId) => userId.toString() !== req.user._id.toString()
+    );
+
+    await chat.save();
+
+    res
+      .status(200)
+      .json({ success: true, msg: "You have left the chat", chat });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Failed to leave chat" });
   }
 };
 

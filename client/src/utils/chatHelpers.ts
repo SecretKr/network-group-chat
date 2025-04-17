@@ -78,8 +78,8 @@ export const sendPrivateMessage = async (
   };
 
   socket.emit("sendMessage", {
-    targetUser: userToChat,
-    message,
+    chatId: chatId,
+    text: message,
   });
 
   setMessages((prev) => {

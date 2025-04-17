@@ -36,11 +36,13 @@ const socketIdToUserId = {};
 
 // Middleware & Routes
 app.use(express.json());
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/chat", chatRoutes);
@@ -56,11 +58,17 @@ app.get("/api/health", (req, res) => {
 
 // Helper functions
 function getSocketIdByUserId(userId) {
-  return Object.keys(socketIdToUserId).find(socketId => socketIdToUserId[socketId] === userId);
+  return Object.keys(socketIdToUserId).find(
+    (socketId) => socketIdToUserId[socketId] === userId
+  );
 }
 
 function getOnlineUserList() {
-  return Object.values(socketIdToUsername);
+  return Object.keys(socketIdToUsername).map((socketId) => {
+    const username = socketIdToUsername[socketId];
+    const userId = socketIdToUserId[socketId];
+    return `${userId}:${username}`;
+  });
 }
 
 // Socket events
@@ -83,49 +91,59 @@ io.on("connection", (socket) => {
     io.emit("userList", getOnlineUserList());
   });
 
-socket.on("createChat", async (data) => {
-  const { chatName, isGroupChat, members } = data;
-  const creatorId = socketIdToUserId[socket.id];
+  socket.on("createChat", async (data) => {
+    const { chatName, isGroupChat, members } = data;
+    const creatorId = socketIdToUserId[socket.id];
 
-  console.log("📨 Incoming createChat:", chatName, isGroupChat, members);
+    console.log("📨 Incoming createChat:", chatName, isGroupChat, members);
 
-  if (!creatorId || !chatName || !Array.isArray(members) || members.length < 1) {
-    console.error("❌ Invalid group chat creation payload");
-    return;
-  }
-
-  if (!members.includes(creatorId)) {
-    members.push(creatorId);
-  }
-
-  try {
-    const newChat = await ChatModel.create({
-      chatName,
-      isGroupChat,
-      users: members,
-    });
-
-    for (const userId of members) {
-      const targetSocketId = getSocketIdByUserId(userId); 
-      if (targetSocketId) {
-        try {
-          const userChats = await ChatModel.find({ users: userId }).populate("users", "_id username");
-          console.log("userchat",targetSocketId);
-          io.to(targetSocketId).emit("chatListUpdate", userChats);
-        } catch (err) {
-          console.error(`❌ Error fetching chats for UID ${userId}:`, err.message);
-        }
-      } else {
-        console.warn(`⚠️ No active socket for UID ${userId}`);
-      }
+    if (
+      !creatorId ||
+      !chatName ||
+      !Array.isArray(members) ||
+      members.length < 1
+    ) {
+      console.error("❌ Invalid group chat creation payload");
+      return;
     }
 
-    console.log(`✅ Chat "${chatName}" created successfully`);
-  } catch (err) {
-    console.error("❌ Failed to create chat:", err.message);
-  }
-});
+    if (!members.includes(creatorId)) {
+      members.push(creatorId);
+    }
 
+    try {
+      const newChat = await ChatModel.create({
+        chatName,
+        isGroupChat,
+        users: members,
+      });
+
+      for (const userId of members) {
+        const targetSocketId = getSocketIdByUserId(userId);
+        if (targetSocketId) {
+          try {
+            const userChats = await ChatModel.find({ users: userId }).populate(
+              "users",
+              "_id username"
+            );
+            console.log("userchat", targetSocketId);
+            io.to(targetSocketId).emit("chatListUpdate", userChats);
+          } catch (err) {
+            console.error(
+              `❌ Error fetching chats for UID ${userId}:`,
+              err.message
+            );
+          }
+        } else {
+          console.warn(`⚠️ No active socket for UID ${userId}`);
+        }
+      }
+
+      console.log(`✅ Chat "${chatName}" created successfully`);
+    } catch (err) {
+      console.error("❌ Failed to create chat:", err.message);
+    }
+  });
 
   socket.on("sendMessage", async (data) => {
     let { chatId, text } = data;
