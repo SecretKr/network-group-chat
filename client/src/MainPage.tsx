@@ -4,6 +4,7 @@ import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
+import { Popup } from "./components/Popup";
 import { useAuth } from "./auth/AuthContext";
 import { getPrivateChats } from "./utils/privateChat";
 import {
@@ -42,6 +43,7 @@ const MainPage = () => {
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
+  const [shownPopup, setShownPopup] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
@@ -208,6 +210,10 @@ const MainPage = () => {
     console.log("🔔 Received updated chat list:", userChats);
   });
 
+  const showPopup = () => {
+    setShownPopup(true);
+  };
+
   if (!loggedIn) return <LoginPage />;
 
   return (
@@ -218,10 +224,15 @@ const MainPage = () => {
         setUserToChat={onUserSelect}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
+        showPopup={showPopup}
       />
-      <button className="flex w-10 h-10 bg-red-500" onClick={handleCreateChat}>
-        createchat
-      </button>
+      {shownPopup && (
+        <Popup
+          userList={userList}
+          username={name}
+          onClose={() => setShownPopup(false)}
+        />
+      )}
       {selectedChat && (
         <Chatbox
           handleBack={handleBack}

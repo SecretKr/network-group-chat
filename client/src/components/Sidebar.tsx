@@ -8,6 +8,7 @@ interface SidebarProps {
   setUserToChat: (user: string) => void;
   userToChat: string;
   getUnreadCount: (user: string) => number;
+  showPopup: () => void;
 }
 
 export function Sidebar({
@@ -16,6 +17,7 @@ export function Sidebar({
   setUserToChat,
   userToChat,
   getUnreadCount,
+  showPopup
 }: SidebarProps) {
   const { logout } = useAuth();
   const sortedUserList = [...userList].sort((a, b) =>
@@ -40,7 +42,10 @@ export function Sidebar({
             Logout
           </button>
         </div>
-        <button className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition">
+        <button 
+          className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+          onClick={showPopup}
+        >
           Create Chat Group
         </button>
       </div>
