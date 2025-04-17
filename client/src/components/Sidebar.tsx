@@ -47,29 +47,29 @@ export function Sidebar({
       <h2 className="text-2xl font-bold mb-4 text-center">Direct Chat</h2>
       <ul className="rounded-lg overflow-hidden divide-y divide-hover">
         {sortedUserList
-          .filter((user) => user.username !== username)
+          .filter((user) => user.uid_name !== username)
           .map((user, index) => (
             <li
               key={index}
-              onClick={() => setUserToChat(user.username)}
+              onClick={() => setUserToChat(user.uid_name)}
               className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition ${
-                userToChat === user.username
+                userToChat === user.uid_name
                   ? "bg-primary-light"
                   : "bg-white hover:bg-hover"
               }`}
             >
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     user.online ? "bg-green-500" : "bg-gray-400"
                   }`}
                 ></span>
-                <p>{user.username.split(":")[1]}</p>
+                <p>{user.uid_name.split(":")[1]}</p>
               </div>
-              {getUnreadCount(user.username) > 0 && (
-                <p className="p-2 bg-accent text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                  {getUnreadCount(user.username)}
-                </p>
+              {getUnreadCount(user.uid_name) > 0 && (
+                <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
+                  <p className="">{getUnreadCount(user.uid_name)}</p>
+                </div>
               )}
             </li>
           ))}
