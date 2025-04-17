@@ -10,6 +10,7 @@ import {
   deleteChat,
   getMessagesChat,
   getAllGroupChats,
+  leaveChat,
 } from "../controllers/chat.js";
 import { protect } from "../middleware/auth.js";
 
