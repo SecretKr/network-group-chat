@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import io from "socket.io-client";
 import { toast } from "react-toastify";
 
@@ -23,7 +23,7 @@ export type MessageMap = {
 };
 
 export type UserWithStatus = {
-  username: string; // format: uid:name
+  uid_name: string; // format: uid:name
   online: boolean;
 };
 
@@ -32,6 +32,9 @@ const MainPage = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<MessageMap>({});
   const [userList, setUserList] = useState<UserWithStatus[]>([]);
+  const userListRef = useRef<UserWithStatus[]>([]);
+  const pendingSocketUsersRef = useRef<string[] | null>(null);
+  const [chatUsersReady, setChatUsersReady] = useState(false);
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
@@ -123,6 +126,28 @@ const MainPage = () => {
     setMessage("");
   };
 
+  const mergeOnlineStatus = (
+    baseList: UserWithStatus[],
+    onlineUsers: string[],
+    uid: string
+  ): UserWithStatus[] => {
+    const updated = baseList.map((user) => ({
+      ...user,
+      online: onlineUsers.includes(user.uid_name),
+    }));
+
+    onlineUsers.forEach((online) => {
+      if (
+        !updated.some((user) => user.uid_name === online) &&
+        online.split(":")[0] !== uid
+      ) {
+        updated.push({ uid_name: online, online: true });
+      }
+    });
+
+    return updated;
+  };
+
   useEffect(() => {
     const fetchChatUsers = async () => {
       const chats = await getPrivateChats(token);
@@ -131,22 +156,29 @@ const MainPage = () => {
       chats?.forEach((chat) => {
         chat.users.forEach((user) => {
           if (user._id !== uid) {
-            chatUsers.add(`${user._id}:${user.username}`);
+            chatUsers.add(`${user._id}:${user.nickname}`);
           }
         });
       });
 
-      setUserList((prev) => {
-        // Preserve online status if available, otherwise default to offline
-        const updatedList: UserWithStatus[] = Array.from(chatUsers).map((u) => {
-          const existing = prev.find((prevU) => prevU.username === u);
-          return {
-            username: u,
-            online: existing?.online || false,
-          };
-        });
-        return updatedList;
-      });
+      const baseList: UserWithStatus[] = Array.from(chatUsers).map((u) => ({
+        uid_name: u,
+        online: false,
+      }));
+
+      userListRef.current = baseList;
+      setChatUsersReady(true);
+      if (pendingSocketUsersRef.current) {
+        const updated = mergeOnlineStatus(
+          baseList,
+          pendingSocketUsersRef.current,
+          uid
+        );
+        setUserList(updated);
+        pendingSocketUsersRef.current = null;
+      } else {
+        setUserList(baseList);
+      }
     };
 
     if (loggedIn && token) {
@@ -162,20 +194,16 @@ const MainPage = () => {
 
   useEffect(() => {
     socket.on("userList", (onlineUsers: string[]) => {
-      setUserList((prev) => {
-        const updated = [...prev];
-        updated.forEach((user) => (user.online = false));
-        onlineUsers.forEach((online) => {
-          const index = updated.findIndex((user) => user.username === online);
-          if (index !== -1) {
-            updated[index].online = true;
-          } else if (online.split(":")[0] !== uid) {
-            updated.push({ username: online, online: true });
-          }
-        });
-
-        return updated;
-      });
+      if (!chatUsersReady) {
+        pendingSocketUsersRef.current = onlineUsers;
+      } else {
+        const updated = mergeOnlineStatus(
+          userListRef.current,
+          onlineUsers,
+          uid
+        );
+        setUserList(updated);
+      }
     });
 
     socket.on("receiveMessage", (data) => {
@@ -204,10 +232,10 @@ const MainPage = () => {
       socket.off("userList");
       socket.off("receiveMessage");
     };
-  }, [socket, uid, userToChat]);
+  }, [socket, uid, userToChat, chatUsersReady]);
 
   const getUnreadCount = (user: string) => messages[user]?.unread || 0;
-  const chatUserObj = userList.find((u) => u.username === userToChat);
+  const chatUserObj = userList.find((u) => u.uid_name === userToChat);
   const onlineStatus = chatUserObj?.online;
 
   if (!loggedIn) return <LoginPage />;
