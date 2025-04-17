@@ -1,13 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import io from "socket.io-client";
-import { toast } from "react-toastify";
 
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
 import { useAuth } from "./auth/AuthContext";
-import { createPrivateChat, getPrivateChats } from "./utils/privateChat";
-import { createMessage, getMessagesByChatId } from "./utils/message";
+import { getPrivateChats } from "./utils/privateChat";
+import {
+  handleUserToChat,
+  sendPrivateMessage,
+  mergeOnlineStatus,
+} from "./utils/chatHelpers";
 
 export type Message = {
   username?: string;
@@ -41,111 +44,35 @@ const MainPage = () => {
 
   const { uid, name, token, loggedIn } = useAuth();
 
-  const handleUserToChat = async (user: string) => {
-    setUserToChat(user);
-    setSelectedChat(true);
-
-    let chats = await getPrivateChats(token);
-    let chatIdLocal = "";
-
-    const targetUserId = user.split(":")[0];
-    let foundChat = chats?.find((chat) =>
-      chat.users.some((u) => u._id === targetUserId)
-    );
-
-    if (foundChat) {
-      chatIdLocal = foundChat._id;
-      setChatId(chatIdLocal);
-      toast.success("Join private chat successfully");
-    } else {
-      const res = await createPrivateChat(user, token);
-      if (res) {
-        toast.success("Create private chat successfully");
-        chats = await getPrivateChats(token);
-        foundChat = chats?.find((chat) =>
-          chat.users.some((u) => u._id === targetUserId)
-        );
-        if (foundChat) {
-          chatIdLocal = foundChat._id;
-          setChatId(chatIdLocal);
-        }
-      } else {
-        toast.error("Something went wrong");
-        return;
-      }
-    }
-
-    const messageHistory = await getMessagesByChatId(chatIdLocal, token);
-    if (messageHistory) {
-      const formattedMessages = messageHistory.map((msg) => ({
-        ...msg,
-        username: msg.username === uid ? `${uid}:${name}` : user,
-      }));
-
-      setMessages((prev) => ({
-        ...prev,
-        [user]: { messages: formattedMessages, unread: 0 },
-      }));
-    }
-  };
-
   const handleBack = () => {
     setUserToChat("");
     setSelectedChat(false);
   };
 
-  const sendPrivateMessage = async () => {
-    if (!userToChat || !message.trim()) return;
-
-    const newMessage: Message = {
-      message,
-      read: false,
-    };
-
-    socket.emit("sendMessage", {
-      targetUser: userToChat,
-      message,
-    });
-
-    setMessages((prev) => {
-      const existing = prev[userToChat] || { messages: [], unread: 0 };
-      return {
-        ...prev,
-        [userToChat]: {
-          messages: [...existing.messages, newMessage],
-          unread: existing.unread,
-        },
-      };
-    });
-
-    const res = await createMessage(chatId, message, token);
-    res
-      ? toast.success("Create message successfully")
-      : toast.error("Something went wrong");
-
-    setMessage("");
+  const onUserSelect = (user: string) => {
+    handleUserToChat(
+      user,
+      uid,
+      name,
+      token,
+      setUserToChat,
+      setSelectedChat,
+      setChatId,
+      setMessages
+    );
   };
 
-  const mergeOnlineStatus = (
-    baseList: UserWithStatus[],
-    onlineUsers: string[],
-    uid: string
-  ): UserWithStatus[] => {
-    const updated = baseList.map((user) => ({
-      ...user,
-      online: onlineUsers.includes(user.uid_name),
-    }));
-
-    onlineUsers.forEach((online) => {
-      if (
-        !updated.some((user) => user.uid_name === online) &&
-        online.split(":")[0] !== uid
-      ) {
-        updated.push({ uid_name: online, online: true });
-      }
-    });
-
-    return updated;
+  const onSendPrivateMessage = () => {
+    sendPrivateMessage(
+      userToChat,
+      message,
+      uid,
+      socket,
+      chatId,
+      token,
+      setMessage,
+      setMessages
+    );
   };
 
   useEffect(() => {
@@ -245,7 +172,7 @@ const MainPage = () => {
       <Sidebar
         userList={userList}
         username={name}
-        setUserToChat={handleUserToChat}
+        setUserToChat={onUserSelect}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
       />
@@ -256,7 +183,7 @@ const MainPage = () => {
           messages={messages}
           setMessage={setMessage}
           message={message}
-          sendPrivateMessage={sendPrivateMessage}
+          sendPrivateMessage={onSendPrivateMessage}
           onlineStatus={onlineStatus}
         />
       )}
