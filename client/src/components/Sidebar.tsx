@@ -58,7 +58,7 @@ export function Sidebar({
                   : "bg-white hover:bg-hover"
               }`}
             >
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     user.online ? "bg-green-500" : "bg-gray-400"
@@ -67,9 +67,9 @@ export function Sidebar({
                 <p>{user.uid_name.split(":")[1]}</p>
               </div>
               {getUnreadCount(user.uid_name) > 0 && (
-                <p className="p-2 bg-accent text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                  {getUnreadCount(user.uid_name)}
-                </p>
+                <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
+                  <p className="">{getUnreadCount(user.uid_name)}</p>
+                </div>
               )}
             </li>
           ))}
