@@ -18,6 +18,7 @@ import { AllGroupModal } from "./components/AllGroupModal";
 export type Message = {
   chatId?: string;
   username?: string;
+  uid?: string;
   message: string;
   read: boolean;
 };
@@ -66,6 +67,7 @@ const MainPage = () => {
   const onUserSelect = (user: string) => {
     handleUserToChat(
       user,
+      userList,
       uid,
       name,
       token,
@@ -223,6 +225,7 @@ const MainPage = () => {
   const chatUserObj = userList.find(
     (u) => u.uid_name.split(":")[0] === userToChat
   );
+  const chatGroupObj = myOpenChatList.find((g) => g.chatId === chatId) || null;
 
   socket.on("chatListUpdate", (userChats) => {
     console.log("🔔 Received updated chat list:", userChats);
@@ -265,6 +268,7 @@ const MainPage = () => {
           message={message}
           sendPrivateMessage={onSendPrivateMessage}
           chatUserObj={chatUserObj || null}
+          chatGroupObj={chatGroupObj || null}
         />
       )}
     </div>

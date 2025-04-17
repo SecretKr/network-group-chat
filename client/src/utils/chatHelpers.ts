@@ -3,8 +3,17 @@ import { createPrivateChat, getPrivateChats } from "./privateChat";
 import { getMessagesByChatId } from "./message";
 import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust import as needed
 
+const getUsernameFromUid = (
+  uid: string | null,
+  userList: UserWithStatus[]
+): string | null => {
+  const found = userList.find((u) => u.uid_name.startsWith(`${uid}:`));
+  return found ? found.uid_name.split(":")[1] : null;
+};
+
 export const handleUserToChat = async (
   user: string,
+  userList: UserWithStatus[],
   uid: string,
   name: string,
   token: string,
@@ -50,7 +59,8 @@ export const handleUserToChat = async (
   if (messageHistory) {
     const formattedMessages = messageHistory.map((msg) => ({
       ...msg,
-      username: msg.username === uid ? `${uid}:${name}` : user,
+      uid: msg.username === uid ? `${uid}:${name}` : user,
+      username: getUsernameFromUid(msg.username || null, userList) || name,
     }));
 
     setMessages((prev) => ({
@@ -78,7 +88,7 @@ export const handleGroupToChat = async (
   if (messageHistory) {
     const formattedMessages = messageHistory.map((msg) => ({
       ...msg,
-      username: msg.username,
+      username: msg.username, // TODO set username and uid (currently, the username is uid)
     }));
 
     setMessages((prev) => ({

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { MessageMap, UserWithStatus } from "../MainPage";
+import { MessageMap, OpenChat, UserWithStatus } from "../MainPage";
 import { useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthContext";
 
@@ -13,6 +13,7 @@ interface ChatboxProps {
   message: string;
   sendPrivateMessage: () => void;
   chatUserObj: UserWithStatus | null;
+  chatGroupObj: OpenChat | null;
 }
 
 export function Chatbox({
@@ -25,6 +26,7 @@ export function Chatbox({
   message,
   sendPrivateMessage,
   chatUserObj,
+  chatGroupObj,
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { uid } = useAuth();
@@ -46,6 +48,7 @@ export function Chatbox({
         <div className="flex items-center justify-center mb-4 gap-4">
           <h1 className="text-2xl font-bold">
             {chatUserObj?.uid_name.split(":")[1]}
+            {isGroupChat && chatGroupObj?.chatName}
           </h1>
           {chatUserObj && (
             <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
@@ -66,17 +69,22 @@ export function Chatbox({
             <div
               key={index}
               className={`flex ${
-                msg.username === userToChat ? "justify-start" : "justify-end"
+                msg.uid === userToChat ? "justify-start" : "justify-end"
               }`}
             >
               <div
                 key={index}
-                className={`max-w-xs p-3 rounded-lg ${
-                  msg.username === userToChat
-                    ? "bg-gray-200"
-                    : "bg-primary-light"
+                className={`max-w-sm p-3 rounded-lg break-words relative mt-3 ${
+                  msg.uid === userToChat ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >
+                <p
+                  className={`absolute text-sm text-gray-400 -top-5 ${
+                    msg.uid === userToChat ? " left-1" : "right-1"
+                  }`}
+                >
+                  {msg.username}
+                </p>
                 {msg.message}
               </div>
             </div>
