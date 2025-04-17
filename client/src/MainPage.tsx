@@ -1,13 +1,16 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import io from "socket.io-client";
-import { toast } from "react-toastify";
 
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
 import { useAuth } from "./auth/AuthContext";
-import { createPrivateChat, getPrivateChats } from "./utils/privateChat";
-import { createMessage, getMessagesByChatId } from "./utils/message";
+import { getPrivateChats } from "./utils/privateChat";
+import {
+  handleUserToChat,
+  sendPrivateMessage,
+  mergeOnlineStatus,
+} from "./utils/chatHelpers";
 
 export type Message = {
   username?: string;
@@ -23,7 +26,7 @@ export type MessageMap = {
 };
 
 export type UserWithStatus = {
-  username: string; // format: uid:name
+  uid_name: string; // format: uid:name
   online: boolean;
 };
 
@@ -32,95 +35,44 @@ const MainPage = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<MessageMap>({});
   const [userList, setUserList] = useState<UserWithStatus[]>([]);
+  const userListRef = useRef<UserWithStatus[]>([]);
+  const pendingSocketUsersRef = useRef<string[] | null>(null);
+  const [chatUsersReady, setChatUsersReady] = useState(false);
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
-  const handleUserToChat = async (user: string) => {
-    setUserToChat(user);
-    setSelectedChat(true);
-
-    let chats = await getPrivateChats(token);
-    let chatIdLocal = "";
-
-    const targetUserId = user.split(":")[0];
-    let foundChat = chats?.find((chat) =>
-      chat.users.some((u) => u._id === targetUserId)
-    );
-
-    if (foundChat) {
-      chatIdLocal = foundChat._id;
-      setChatId(chatIdLocal);
-      toast.success("Join private chat successfully");
-    } else {
-      const res = await createPrivateChat(user, token);
-      if (res) {
-        toast.success("Create private chat successfully");
-        chats = await getPrivateChats(token);
-        foundChat = chats?.find((chat) =>
-          chat.users.some((u) => u._id === targetUserId)
-        );
-        if (foundChat) {
-          chatIdLocal = foundChat._id;
-          setChatId(chatIdLocal);
-        }
-      } else {
-        toast.error("Something went wrong");
-        return;
-      }
-    }
-
-    const messageHistory = await getMessagesByChatId(chatIdLocal, token);
-    if (messageHistory) {
-      const formattedMessages = messageHistory.map((msg) => ({
-        ...msg,
-        username: msg.username === uid ? `${uid}:${name}` : user,
-      }));
-
-      setMessages((prev) => ({
-        ...prev,
-        [user]: { messages: formattedMessages, unread: 0 },
-      }));
-    }
-  };
-
   const handleBack = () => {
     setUserToChat("");
     setSelectedChat(false);
   };
 
-  const sendPrivateMessage = async () => {
-    if (!userToChat || !message.trim()) return;
+  const onUserSelect = (user: string) => {
+    handleUserToChat(
+      user,
+      uid,
+      name,
+      token,
+      setUserToChat,
+      setSelectedChat,
+      setChatId,
+      setMessages
+    );
+  };
 
-    const newMessage: Message = {
+  const onSendPrivateMessage = () => {
+    sendPrivateMessage(
+      userToChat,
       message,
-      read: false,
-    };
-
-    socket.emit("sendMessage", {
-      targetUser: userToChat,
-      message,
-    });
-
-    setMessages((prev) => {
-      const existing = prev[userToChat] || { messages: [], unread: 0 };
-      return {
-        ...prev,
-        [userToChat]: {
-          messages: [...existing.messages, newMessage],
-          unread: existing.unread,
-        },
-      };
-    });
-
-    const res = await createMessage(chatId, message, token);
-    res
-      ? toast.success("Create message successfully")
-      : toast.error("Something went wrong");
-
-    setMessage("");
+      uid,
+      socket,
+      chatId,
+      token,
+      setMessage,
+      setMessages
+    );
   };
 
   useEffect(() => {
@@ -131,22 +83,29 @@ const MainPage = () => {
       chats?.forEach((chat) => {
         chat.users.forEach((user) => {
           if (user._id !== uid) {
-            chatUsers.add(`${user._id}:${user.username}`);
+            chatUsers.add(`${user._id}:${user.nickname}`);
           }
         });
       });
 
-      setUserList((prev) => {
-        // Preserve online status if available, otherwise default to offline
-        const updatedList: UserWithStatus[] = Array.from(chatUsers).map((u) => {
-          const existing = prev.find((prevU) => prevU.username === u);
-          return {
-            username: u,
-            online: existing?.online || false,
-          };
-        });
-        return updatedList;
-      });
+      const baseList: UserWithStatus[] = Array.from(chatUsers).map((u) => ({
+        uid_name: u,
+        online: false,
+      }));
+
+      userListRef.current = baseList;
+      setChatUsersReady(true);
+      if (pendingSocketUsersRef.current) {
+        const updated = mergeOnlineStatus(
+          baseList,
+          pendingSocketUsersRef.current,
+          uid
+        );
+        setUserList(updated);
+        pendingSocketUsersRef.current = null;
+      } else {
+        setUserList(baseList);
+      }
     };
 
     if (loggedIn && token) {
@@ -162,20 +121,16 @@ const MainPage = () => {
 
   useEffect(() => {
     socket.on("userList", (onlineUsers: string[]) => {
-      setUserList((prev) => {
-        const updated = [...prev];
-        updated.forEach((user) => (user.online = false));
-        onlineUsers.forEach((online) => {
-          const index = updated.findIndex((user) => user.username === online);
-          if (index !== -1) {
-            updated[index].online = true;
-          } else if (online.split(":")[0] !== uid) {
-            updated.push({ username: online, online: true });
-          }
-        });
-
-        return updated;
-      });
+      if (!chatUsersReady) {
+        pendingSocketUsersRef.current = onlineUsers;
+      } else {
+        const updated = mergeOnlineStatus(
+          userListRef.current,
+          onlineUsers,
+          uid
+        );
+        setUserList(updated);
+      }
     });
 
     socket.on("receiveMessage", (data) => {
@@ -204,10 +159,10 @@ const MainPage = () => {
       socket.off("userList");
       socket.off("receiveMessage");
     };
-  }, [socket, uid, userToChat]);
+  }, [socket, uid, userToChat, chatUsersReady]);
 
   const getUnreadCount = (user: string) => messages[user]?.unread || 0;
-  const chatUserObj = userList.find((u) => u.username === userToChat);
+  const chatUserObj = userList.find((u) => u.uid_name === userToChat);
   const onlineStatus = chatUserObj?.online;
 
   if (!loggedIn) return <LoginPage />;
@@ -217,7 +172,7 @@ const MainPage = () => {
       <Sidebar
         userList={userList}
         username={name}
-        setUserToChat={handleUserToChat}
+        setUserToChat={onUserSelect}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
       />
@@ -228,7 +183,7 @@ const MainPage = () => {
           messages={messages}
           setMessage={setMessage}
           message={message}
-          sendPrivateMessage={sendPrivateMessage}
+          sendPrivateMessage={onSendPrivateMessage}
           onlineStatus={onlineStatus}
         />
       )}
