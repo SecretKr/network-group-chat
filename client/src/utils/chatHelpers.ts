@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { createPrivateChat, getPrivateChats } from "./privateChat";
-import { createMessage, getMessagesByChatId } from "./message";
+import { getMessagesByChatId } from "./message";
 import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust import as needed
 
 export const handleUserToChat = async (
@@ -111,7 +111,7 @@ export const sendPrivateMessage = async (
     text: message,
   });
 
-  if (userToChat != "") {
+  if (userToChat !== "") {
     setMessages((prev) => {
       const existing = prev[userToChat] || { messages: [], unread: 0 };
       return {

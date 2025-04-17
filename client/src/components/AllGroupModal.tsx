@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { OpenChat, socket } from "../MainPage";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AllGroupModalProps {
   onClose: () => void;

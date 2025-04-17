@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { postApiV1ChatGroup } from "../generated/api";
 import { useAuth } from "../auth/AuthContext";
 import { socket } from "../MainPage";
 

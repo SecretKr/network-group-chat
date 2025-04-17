@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 import { LoginPage } from "./components/Login-Page";
@@ -12,7 +12,6 @@ import {
   mergeOnlineStatus,
   handleGroupToChat,
 } from "./utils/chatHelpers";
-import { toast } from "react-toastify";
 import { CreateGroupModal } from "./components/CreateGroupModal";
 import { AllGroupModal } from "./components/AllGroupModal";
 
@@ -146,7 +145,7 @@ const MainPage = () => {
       socket.emit("setUsername", `${uid}:${name}`);
       console.log("Socket connection established with UID:", uid);
     }
-  }, [loggedIn, uid, name, socket]);
+  }, [loggedIn, uid, name]);
 
   useEffect(() => {
     socket.on("userList", (onlineUsers: string[]) => {
@@ -218,7 +217,7 @@ const MainPage = () => {
       socket.off("myOpenChatList");
       socket.off("receiveGroupMessage");
     };
-  }, [socket, uid, userToChat, chatUsersReady]);
+  }, [uid, userToChat, chatUsersReady, chatId]);
 
   const getUnreadCount = (uid: string) => messages[uid]?.unread || 0;
   const chatUserObj = userList.find(
