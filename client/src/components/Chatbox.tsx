@@ -1,10 +1,13 @@
 import { Icon } from "@iconify/react";
 import { MessageMap, UserWithStatus } from "../MainPage";
 import { useEffect, useRef } from "react";
+import { useAuth } from "../auth/AuthContext";
 
 interface ChatboxProps {
+  isGroupChat: boolean;
   handleBack: () => void;
   userToChat: string | null;
+  chatId: string;
   messages: MessageMap;
   setMessage: (message: string) => void;
   message: string;
@@ -13,8 +16,10 @@ interface ChatboxProps {
 }
 
 export function Chatbox({
+  isGroupChat,
   handleBack,
   userToChat,
+  chatId,
   messages,
   setMessage,
   message,
@@ -22,6 +27,7 @@ export function Chatbox({
   chatUserObj,
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { uid } = useAuth();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
@@ -54,7 +60,7 @@ export function Chatbox({
         </div>
       </div>
 
-      {userToChat && (
+      {userToChat && !isGroupChat ? (
         <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
           {(messages[userToChat]?.messages || []).map((msg, index) => (
             <div
@@ -69,6 +75,27 @@ export function Chatbox({
                   msg.username === userToChat
                     ? "bg-gray-200"
                     : "bg-primary-light"
+                }`}
+              >
+                {msg.message}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
+          {(messages[chatId]?.messages || []).map((msg, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                msg.username !== uid ? "justify-start" : "justify-end"
+              }`}
+            >
+              <div
+                key={index}
+                className={`max-w-xs p-3 rounded-lg ${
+                  msg.username !== uid ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >
                 {msg.message}

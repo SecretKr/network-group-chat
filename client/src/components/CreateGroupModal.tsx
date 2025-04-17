@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { postApiV1ChatGroup } from "../generated/api";
 import { useAuth } from "../auth/AuthContext";
+import { socket } from "../MainPage";
 
 interface CreateGroupModalProps {
   onClose: () => void;
@@ -10,7 +11,7 @@ interface CreateGroupModalProps {
 
 export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState("");
-  const { token } = useAuth();
+  const { uid } = useAuth();
 
   const handleCreateGroup = async () => {
     if (groupName.trim() === "") {
@@ -18,20 +19,56 @@ export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
       return;
     }
 
-    const res = await postApiV1ChatGroup({
-      body: {
-        chatName: groupName,
-        users: [],
-      } as any,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    console.log(res);
-    if (res.response.status !== 200) {
-      toast.error("Failed to create group");
+    // const res = await postApiV1ChatGroup({
+    //   body: {
+    //     chatName: groupName,
+    //     users: [],
+    //   } as any,
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // });
+    // console.log(res);
+    // if (res.response.status !== 200) {
+    //   toast.error("Failed to create group");
+    //   return;
+    // }
+
+    const memberUIDs = [uid];
+    // const memberUIDs = userList.map((user) => {
+    //   const uid = user.uid_name.split(":")[0];
+    //   console.log(`🔍 Extracted UID: ${uid} from ${user.uid_name}`);
+    //   return uid;
+    // });
+
+    console.log("👥 Member UIDs for group chat:", memberUIDs);
+
+    if (!uid) {
+      console.error("❌ Missing current user ID", { uid });
+      toast.error("User info missing");
       return;
     }
+
+    if (memberUIDs.length === 0) {
+      console.warn("⚠️ No members to create group chat with");
+      toast.error("No members selected");
+      return;
+    }
+
+    const payload = {
+      chatName: groupName,
+      isGroupChat: true,
+      members: memberUIDs,
+      groupOwner: uid,
+    };
+
+    console.log("📦 Emitting 'createChat' with payload:", payload);
+
+    socket.emit("createChat", payload, (response: any) => {
+      console.log("Server Response:", response);
+    });
+
+    toast.success("Group chat creation requested");
 
     onClose();
   };
@@ -42,7 +79,7 @@ export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-background p-4 rounded-lg shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md"
+        className="bg-background p-4 rounded-lg shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md max-h-[90%] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-4 right-4">

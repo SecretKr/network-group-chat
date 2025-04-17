@@ -4,9 +4,10 @@ import { use, useEffect, useState } from "react";
 
 interface AllGroupModalProps {
   onClose: () => void;
+  myOpenChatList: OpenChat[];
 }
 
-export function AllGroupModal({ onClose }: AllGroupModalProps) {
+export function AllGroupModal({ onClose, myOpenChatList }: AllGroupModalProps) {
   const [allOpenChatList, setAllOpenChatList] = useState<OpenChat[]>([]);
 
   useEffect(() => {
@@ -19,6 +20,16 @@ export function AllGroupModal({ onClose }: AllGroupModalProps) {
       setAllOpenChatList(openChatList);
     });
   }, []);
+
+  const joinedChatIds = new Set(myOpenChatList.map((chat) => chat.chatId));
+  const filteredChatList = allOpenChatList.filter(
+    (chat) => !joinedChatIds.has(chat.chatId)
+  );
+
+  const handleJoinGroup = (chatId: string) => {
+    socket.emit("joinGroupChat", { chatId });
+    onClose();
+  };
 
   return (
     <div
@@ -37,37 +48,21 @@ export function AllGroupModal({ onClose }: AllGroupModalProps) {
         </button>
         <h2 className="text-xl font-bold">OpenChats</h2>
         <ul className="rounded-lg overflow-hidden divide-y divide-hover">
-          {allOpenChatList.map((openChat) => (
+          {filteredChatList.map((openChat) => (
             <li
               key={openChat.chatId}
-              // onClick={() => setUserToChat(user.uid_name)}
               className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white hover:bg-hover`}
+              onClick={() => handleJoinGroup(openChat.chatId)}
             >
               <div className="flex items-center gap-2">
-                {/* <span
-                    className={`w-2 h-2 rounded-full ${
-                      user.online ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></span> */}
-                <p>
-                  {openChat.chatName}
-                  {/* {openChat.split(":")[1]} */}
-                </p>
+                <p>{openChat.chatName}</p>
               </div>
-              {/* {getUnreadCount(user.uid_name) > 0 && (
-                  <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                    <p className="">{getUnreadCount(user.uid_name)}</p>
-                  </div>
-                )} */}
+              <button className="w-16 bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition">
+                Join
+              </button>
             </li>
           ))}
         </ul>
-        {/* <button
-          className="w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
-          onClick={handleCreateGroup}
-        >
-          Create
-        </button> */}
       </div>
     </div>
   );

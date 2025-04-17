@@ -10,12 +10,14 @@ import {
   handleUserToChat,
   sendPrivateMessage,
   mergeOnlineStatus,
+  handleGroupToChat,
 } from "./utils/chatHelpers";
 import { toast } from "react-toastify";
 import { CreateGroupModal } from "./components/CreateGroupModal";
 import { AllGroupModal } from "./components/AllGroupModal";
 
 export type Message = {
+  chatId?: string;
   username?: string;
   message: string;
   read: boolean;
@@ -58,12 +60,26 @@ const MainPage = () => {
 
   const handleBack = () => {
     setUserToChat("");
+    setChatId("");
     setSelectedChat(false);
   };
 
   const onUserSelect = (user: string) => {
     handleUserToChat(
       user,
+      uid,
+      name,
+      token,
+      setUserToChat,
+      setSelectedChat,
+      setChatId,
+      setMessages
+    );
+  };
+
+  const onGroupSelect = (chatId: string) => {
+    handleGroupToChat(
+      chatId,
       uid,
       name,
       token,
@@ -146,8 +162,7 @@ const MainPage = () => {
       }
     });
 
-    socket.on("openChatList", (userChats: OpenChat[]) => {
-      console.log("Received open chat list:", userChats);
+    socket.on("myOpenChatList", (userChats: OpenChat[]) => {
       setMyOpenChatList(userChats);
     });
 
@@ -174,9 +189,34 @@ const MainPage = () => {
       });
     });
 
+    socket.on("receiveGroupMessage", (data) => {
+      const { chatId: groupId, senderId, text } = data;
+      const isActiveGroup = groupId === chatId && !userToChat;
+
+      const newMessage: Message = {
+        chatId: groupId,
+        username: senderId,
+        message: text,
+        read: isActiveGroup,
+      };
+
+      setMessages((prev) => {
+        const existing = prev[groupId] || { messages: [], unread: 0 };
+        return {
+          ...prev,
+          [groupId]: {
+            messages: [...existing.messages, newMessage],
+            unread: isActiveGroup ? 0 : existing.unread + 1,
+          },
+        };
+      });
+    });
+
     return () => {
       socket.off("userList");
       socket.off("receiveMessage");
+      socket.off("myOpenChatList");
+      socket.off("receiveGroupMessage");
     };
   }, [socket, uid, userToChat, chatUsersReady]);
 
@@ -184,42 +224,6 @@ const MainPage = () => {
   const chatUserObj = userList.find(
     (u) => u.uid_name.split(":")[0] === userToChat
   );
-
-  const handleCreateChat = () => {
-    const memberUIDs = userList.map((user) => {
-      const uid = user.uid_name.split(":")[0];
-      console.log(`🔍 Extracted UID: ${uid} from ${user.uid_name}`);
-      return uid;
-    });
-
-    console.log("👥 Member UIDs for group chat:", memberUIDs);
-
-    if (!uid || !name) {
-      console.error("❌ Missing current user ID or name", { uid, name });
-      toast.error("User info missing");
-      return;
-    }
-
-    if (memberUIDs.length === 0) {
-      console.warn("⚠️ No members to create group chat with");
-      toast.error("No members selected");
-      return;
-    }
-
-    const payload = {
-      chatName: `${name}'s Group`,
-      isGroupChat: true,
-      members: memberUIDs,
-    };
-
-    console.log("📦 Emitting 'createChat' with payload:", payload);
-
-    socket.emit("createChat", payload, (response: any) => {
-      console.log("Server Response:", response);
-    });
-
-    toast.success("Group chat creation requested");
-  };
 
   socket.on("chatListUpdate", (userChats) => {
     console.log("🔔 Received updated chat list:", userChats);
@@ -234,21 +238,29 @@ const MainPage = () => {
         openChatList={myOpenChatList}
         username={name}
         setUserToChat={onUserSelect}
+        setGroupToChat={onGroupSelect}
         userToChat={userToChat}
+        setChatId={setChatId}
+        chatId={chatId}
         getUnreadCount={getUnreadCount}
         showAllGroupModal={() => setShowAllGroupModal(true)}
         showCreateGroupModal={() => setShowCreateGroupModal(true)}
       />
       {showAllGroupModal && (
-        <AllGroupModal onClose={() => setShowAllGroupModal(false)} />
+        <AllGroupModal
+          onClose={() => setShowAllGroupModal(false)}
+          myOpenChatList={myOpenChatList}
+        />
       )}
       {showCreateGroupModal && (
         <CreateGroupModal onClose={() => setShowCreateGroupModal(false)} />
       )}
       {selectedChat && (
         <Chatbox
+          isGroupChat={userToChat === "" && chatId !== ""}
           handleBack={handleBack}
           userToChat={userToChat}
+          chatId={chatId}
           messages={messages}
           setMessage={setMessage}
           message={message}

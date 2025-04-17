@@ -60,6 +60,34 @@ export const handleUserToChat = async (
   }
 };
 
+export const handleGroupToChat = async (
+  chatId: string,
+  uid: string,
+  name: string,
+  token: string,
+  setUserToChat: (user: string) => void,
+  setSelectedChat: (val: boolean) => void,
+  setChatId: (id: string) => void,
+  setMessages: React.Dispatch<React.SetStateAction<MessageMap>>
+) => {
+  setChatId(chatId);
+  setUserToChat("");
+  setSelectedChat(true);
+
+  const messageHistory = await getMessagesByChatId(chatId, token);
+  if (messageHistory) {
+    const formattedMessages = messageHistory.map((msg) => ({
+      ...msg,
+      username: msg.username,
+    }));
+
+    setMessages((prev) => ({
+      ...prev,
+      [chatId]: { messages: formattedMessages, unread: 0 },
+    }));
+  }
+};
+
 export const sendPrivateMessage = async (
   userToChat: string,
   message: string,
@@ -70,10 +98,11 @@ export const sendPrivateMessage = async (
   setMessage: (val: string) => void,
   setMessages: React.Dispatch<React.SetStateAction<MessageMap>>
 ) => {
-  if (!userToChat || !message.trim()) return;
+  //if (!userToChat || !message.trim()) return;
 
   const newMessage: Message = {
     message,
+    username: uid,
     read: false,
   };
 
@@ -82,16 +111,29 @@ export const sendPrivateMessage = async (
     text: message,
   });
 
-  setMessages((prev) => {
-    const existing = prev[userToChat] || { messages: [], unread: 0 };
-    return {
-      ...prev,
-      [userToChat]: {
-        messages: [...existing.messages, newMessage],
-        unread: existing.unread,
-      },
-    };
-  });
+  if (userToChat != "") {
+    setMessages((prev) => {
+      const existing = prev[userToChat] || { messages: [], unread: 0 };
+      return {
+        ...prev,
+        [userToChat]: {
+          messages: [...existing.messages, newMessage],
+          unread: existing.unread,
+        },
+      };
+    });
+  } else {
+    setMessages((prev) => {
+      const existing = prev[chatId] || { messages: [], unread: 0 };
+      return {
+        ...prev,
+        [chatId]: {
+          messages: [...existing.messages, newMessage],
+          unread: 0,
+        },
+      };
+    });
+  }
 
   // const res = await createMessage(chatId, message, token);
   // res

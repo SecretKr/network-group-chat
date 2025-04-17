@@ -7,7 +7,10 @@ interface SidebarProps {
   openChatList: OpenChat[];
   username: string;
   setUserToChat: (user: string) => void;
+  setGroupToChat: (group: string) => void;
   userToChat: string;
+  setChatId: (id: string) => void;
+  chatId: string;
   getUnreadCount: (user: string) => number;
   showAllGroupModal: () => void;
   showCreateGroupModal: () => void;
@@ -18,7 +21,10 @@ export function Sidebar({
   openChatList,
   username,
   setUserToChat,
+  setGroupToChat,
   userToChat,
+  setChatId,
+  chatId,
   getUnreadCount,
   showAllGroupModal,
   showCreateGroupModal,
@@ -49,7 +55,7 @@ export function Sidebar({
       </div>
       <div className="min-h-[calc(100dvh-73px-73px)]">
         <div className="flex flex-col p-4">
-          {sortedUserList.length && (
+          {sortedUserList.length > 0 && (
             <h2 className="text-2xl font-bold pb-4 text-center">Direct Chat</h2>
           )}
           <ul className="rounded-lg overflow-hidden divide-y divide-hover">
@@ -88,8 +94,12 @@ export function Sidebar({
             {openChatList.map((openChat) => (
               <li
                 key={openChat.chatId}
-                // onClick={() => setUserToChat(user.uid_name)}
-                className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white hover:bg-hover`}
+                onClick={() => setGroupToChat(openChat.chatId)}
+                className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition ${
+                  chatId === openChat.chatId
+                    ? "bg-primary-light"
+                    : "bg-white hover:bg-hover"
+                }`}
               >
                 <div className="flex items-center gap-2">
                   {/* <span
@@ -97,10 +107,7 @@ export function Sidebar({
                       user.online ? "bg-green-500" : "bg-gray-400"
                     }`}
                   ></span> */}
-                  <p>
-                    {openChat.chatName}
-                    {/* {openChat.split(":")[1]} */}
-                  </p>
+                  <p>{openChat.chatName}</p>
                 </div>
                 {/* {getUnreadCount(user.uid_name) > 0 && (
                   <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">

@@ -13,7 +13,7 @@ import messageRoutes from "./routes/message.js";
 
 import MessageModel from "./models/Message.js";
 import ChatModel from "./models/Chat.js";
-import { broadcastAllOpenChat } from "./utils/socket.js";
+import { broadcastAllOpenChat, broadcastMyOpenChats } from "./utils/socket.js";
 
 dotenv.config();
 connectDB();
@@ -76,7 +76,7 @@ function getOnlineUserList() {
 io.on("connection", (socket) => {
   console.log("✅ New socket connected:", socket.id);
 
-  socket.on("setUsername", (data) => {
+  socket.on("setUsername", async (data) => {
     const [userId, username] = data.split(":");
     const existingSocketId = getSocketIdByUserId(userId);
 
@@ -90,22 +90,33 @@ io.on("connection", (socket) => {
 
     console.log(`👤 User ${userId} (${username}) connected.`);
     io.emit("userList", getOnlineUserList());
-    broadcastAllOpenChat();
+    await broadcastMyOpenChats(userId, socket);
   });
 
   socket.on("getOpenChats", async () => {
-    broadcastAllOpenChat();
+    await broadcastAllOpenChat();
+  });
+
+  socket.on("getMyOpenChats", async (userId) => {
+    await broadcastMyOpenChats(userId, socket);
   });
 
   socket.on("createChat", async (data) => {
-    const { chatName, isGroupChat, members } = data;
+    const { chatName, isGroupChat, members, groupOwner } = data;
     const creatorId = socketIdToUserId[socket.id];
 
-    console.log("📨 Incoming createChat:", chatName, isGroupChat, members);
+    console.log(
+      "📨 Incoming createChat:",
+      chatName,
+      isGroupChat,
+      members,
+      groupOwner
+    );
 
     if (
       !creatorId ||
       !chatName ||
+      !groupOwner ||
       !Array.isArray(members) ||
       members.length < 1
     ) {
@@ -121,6 +132,7 @@ io.on("connection", (socket) => {
       const newChat = await ChatModel.create({
         chatName,
         isGroupChat,
+        groupOwner,
         users: members,
       });
 
@@ -128,12 +140,13 @@ io.on("connection", (socket) => {
         const targetSocketId = getSocketIdByUserId(userId);
         if (targetSocketId) {
           try {
-            const userChats = await ChatModel.find({ users: userId }).populate(
-              "users",
-              "_id username"
-            );
+            const userChats = await ChatModel.find({
+              users: userId,
+              isGroupChat: true,
+            }).populate("users", "_id username");
             console.log("userchat", targetSocketId);
-            io.to(targetSocketId).emit("chatListUpdate", userChats);
+            io.to(targetSocketId).emit("myOpenChatList", userChats);
+            await broadcastAllOpenChat();
           } catch (err) {
             console.error(
               `❌ Error fetching chats for UID ${userId}:`,
@@ -198,6 +211,38 @@ io.on("connection", (socket) => {
       });
     } catch (err) {
       console.error("❌ Error saving or emitting message:", err.message);
+    }
+  });
+
+  socket.on("joinGroupChat", async ({ chatId }) => {
+    const userId = socketIdToUserId[socket.id];
+    if (!userId || !chatId) {
+      console.error("❌ Invalid joinGroupChat payload");
+      return;
+    }
+
+    try {
+      const chat = await ChatModel.findById(chatId);
+      if (!chat) {
+        console.error("❌ Chat not found:", chatId);
+        return;
+      }
+
+      // Only add if the user hasn't joined yet
+      if (!chat.users.includes(userId)) {
+        chat.users.push(userId);
+        await chat.save();
+      }
+
+      // Emit updated personal open chats
+      await broadcastMyOpenChats(userId, socket);
+
+      // Emit updated global open chats to everyone
+      await broadcastAllOpenChat();
+
+      console.log(`✅ User ${userId} joined chat ${chatId}`);
+    } catch (err) {
+      console.error("❌ Error joining group chat:", err.message);
     }
   });
 

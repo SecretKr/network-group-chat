@@ -1,7 +1,7 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Message from "../models/Message.js";
-import { broadcastAllOpenChat } from "../utils/socket.js";
+import { broadcastAllOpenChat, broadcastMyOpenChats } from "../utils/socket.js";
 
 const sanitizeUsers = "-password -createdAt -__v";
 
@@ -145,7 +145,8 @@ export const createGroupChat = async (req, res) => {
       isGroupChat: true,
     });
 
-    broadcastAllOpenChat();
+    await broadcastAllOpenChat();
+    await broadcastMyOpenChats(req.user._id, req.socketId);
 
     const fullGroupChat = await Chat.findById(newGroupChat._id).populate(
       "users",
