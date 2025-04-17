@@ -1,6 +1,7 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Message from "../models/Message.js";
+import { broadcastAllOpenChat, broadcastMyOpenChats } from "../utils/socket.js";
 
 const sanitizeUsers = "-password -createdAt -__v";
 
@@ -24,12 +25,36 @@ export const getChats = async (req, res) => {
   }
 };
 
+export const getAllGroupChats = async (req, res) => {
+  try {
+    const groupChats = await Chat.find({
+      isGroupChat: true,
+    })
+      .populate("users", sanitizeUsers)
+      .populate({
+        path: "groupOwner",
+        select: sanitizeUsers,
+      });
+
+    res.status(200).json(groupChats);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, msg: "Failed to get all group chats" });
+  }
+};
+
 export const getGroupChats = async (req, res) => {
   try {
     const groupChats = await Chat.find({
       users: req.user._id,
       isGroupChat: true,
-    }).populate("users", sanitizeUsers);
+    })
+      .populate("users", sanitizeUsers)
+      .populate({
+        path: "groupOwner",
+        select: sanitizeUsers,
+      });
 
     res.status(200).json(groupChats);
   } catch (err) {
@@ -86,10 +111,17 @@ export const createChat = async (req, res) => {
 export const createGroupChat = async (req, res) => {
   const { chatName, users } = req.body;
 
-  if (!chatName || !users || !Array.isArray(users) || users.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, msg: "Name and at least one user required" });
+  // if (!chatName || !users || !Array.isArray(users) || users.length === 0) {
+  //   return res
+  //     .status(400)
+  //     .json({ success: false, msg: "Name and at least one user required" });
+  // }
+
+  if (!chatName) {
+    return res.status(400).json({
+      success: false,
+      msg: "Chat name is required",
+    });
   }
 
   if (users.includes(req.user._id.toString())) {
@@ -109,8 +141,12 @@ export const createGroupChat = async (req, res) => {
     const newGroupChat = await Chat.create({
       chatName,
       users: [...users, req.user._id],
+      groupOwner: req.user._id,
       isGroupChat: true,
     });
+
+    await broadcastAllOpenChat();
+    await broadcastMyOpenChats(req.user._id, req.socketId);
 
     const fullGroupChat = await Chat.findById(newGroupChat._id).populate(
       "users",
@@ -237,6 +273,48 @@ export const deleteChat = async (req, res) => {
   }
 };
 
+export const leaveChat = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id);
+
+    if (!chat) {
+      return res.status(404).json({ success: false, msg: "Chat not found" });
+    }
+
+    // Check if user is part of this chat
+    if (!chat.users.includes(req.user._id)) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "You are not part of this chat" });
+    }
+
+    // If user is the group owner, delete the entire chat
+    if (
+      chat.isGroupChat &&
+      chat.groupOwner?.toString() === req.user._id.toString()
+    ) {
+      await chat.deleteOne();
+      return res
+        .status(200)
+        .json({ success: true, msg: "Group chat deleted because owner left" });
+    }
+
+    // Otherwise, just remove user from the chat
+    chat.users = chat.users.filter(
+      (userId) => userId.toString() !== req.user._id.toString()
+    );
+
+    await chat.save();
+
+    res
+      .status(200)
+      .json({ success: true, msg: "You have left the chat", chat });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Failed to leave chat" });
+  }
+};
+
 export const getMessagesChat = async (req, res) => {
   try {
     const chatDetails = await Chat.findById(req.params.id);
@@ -248,9 +326,11 @@ export const getMessagesChat = async (req, res) => {
       return res.status(403).json({ success: false, msg: "Unauthorized" });
     }
 
-    const chatMessages = await Message.find({ chatId: req.params.id }).sort({
-      createdAt: 1,
-    });
+    const chatMessages = await Message.find({ chatId: req.params.id })
+      .sort({
+        createdAt: 1,
+      })
+      .populate("senderId", sanitizeUsers);
 
     res.status(200).json(chatMessages);
   } catch (err) {

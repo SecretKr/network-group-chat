@@ -9,6 +9,8 @@ import {
   addToGroup,
   deleteChat,
   getMessagesChat,
+  getAllGroupChats,
+  leaveChat,
 } from "../controllers/chat.js";
 import { protect } from "../middleware/auth.js";
 
@@ -21,6 +23,8 @@ router
   .get(protect, getGroupChats)
   .post(protect, createGroupChat);
 
+router.route("/group/all").get(getAllGroupChats);
+
 router.route("/group/add").put(protect, addToGroup);
 
 router
@@ -28,6 +32,8 @@ router
   .get(protect, getChat)
   .put(protect, updateChat)
   .delete(protect, deleteChat);
+
+router.route("/:id/leave").put(protect, leaveChat);
 
 router.route("/:id/messageschat").get(protect, getMessagesChat);
 

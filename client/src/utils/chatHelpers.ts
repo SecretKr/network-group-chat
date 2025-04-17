@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { createPrivateChat, getPrivateChats } from "./privateChat";
-import { createMessage, getMessagesByChatId } from "./message";
+import { getMessagesByChatId } from "./message";
 import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust import as needed
 
 export const handleUserToChat = async (
@@ -50,12 +50,40 @@ export const handleUserToChat = async (
   if (messageHistory) {
     const formattedMessages = messageHistory.map((msg) => ({
       ...msg,
-      username: msg.username === uid ? `${uid}:${name}` : user,
+      uid: msg.uid === uid ? `${uid}:${name}` : user,
+      username: msg.username,
     }));
 
     setMessages((prev) => ({
       ...prev,
       [user]: { messages: formattedMessages, unread: 0 },
+    }));
+  }
+};
+
+export const handleGroupToChat = async (
+  chatId: string,
+  token: string,
+  setUserToChat: (user: string) => void,
+  setSelectedChat: (val: boolean) => void,
+  setChatId: (id: string) => void,
+  setMessages: React.Dispatch<React.SetStateAction<MessageMap>>
+) => {
+  setChatId(chatId);
+  setUserToChat("");
+  setSelectedChat(true);
+
+  const messageHistory = await getMessagesByChatId(chatId, token);
+  if (messageHistory) {
+    const formattedMessages = messageHistory.map((msg) => ({
+      ...msg,
+      uid: msg.uid,
+      username: msg.username,
+    }));
+
+    setMessages((prev) => ({
+      ...prev,
+      [chatId]: { messages: formattedMessages, unread: 0 },
     }));
   }
 };
@@ -66,37 +94,52 @@ export const sendPrivateMessage = async (
   uid: string,
   socket: any,
   chatId: string,
-  token: string,
+  name: string,
   setMessage: (val: string) => void,
   setMessages: React.Dispatch<React.SetStateAction<MessageMap>>
 ) => {
-  if (!userToChat || !message.trim()) return;
+  //if (!userToChat || !message.trim()) return;
 
   const newMessage: Message = {
     message,
+    username: name,
+    uid: uid,
     read: false,
   };
 
   socket.emit("sendMessage", {
-    targetUser: userToChat,
-    message,
+    chatId: chatId,
+    text: message,
   });
 
-  setMessages((prev) => {
-    const existing = prev[userToChat] || { messages: [], unread: 0 };
-    return {
-      ...prev,
-      [userToChat]: {
-        messages: [...existing.messages, newMessage],
-        unread: existing.unread,
-      },
-    };
-  });
+  if (userToChat !== "") {
+    setMessages((prev) => {
+      const existing = prev[userToChat] || { messages: [], unread: 0 };
+      return {
+        ...prev,
+        [userToChat]: {
+          messages: [...existing.messages, newMessage],
+          unread: existing.unread,
+        },
+      };
+    });
+  } else {
+    setMessages((prev) => {
+      const existing = prev[chatId] || { messages: [], unread: 0 };
+      return {
+        ...prev,
+        [chatId]: {
+          messages: [...existing.messages, newMessage],
+          unread: 0,
+        },
+      };
+    });
+  }
 
-  const res = await createMessage(chatId, message, token);
-  res
-    ? toast.success("Create message successfully")
-    : toast.error("Something went wrong");
+  // const res = await createMessage(chatId, message, token);
+  // res
+  //   ? toast.success("Create message successfully")
+  //   : toast.error("Something went wrong");
 
   setMessage("");
 };

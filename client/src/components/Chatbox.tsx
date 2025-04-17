@@ -1,25 +1,40 @@
 import { Icon } from "@iconify/react";
-import { MessageMap } from "../MainPage";
+import { MessageMap, OpenChat, UserWithStatus } from "../MainPage";
+import { useEffect, useRef } from "react";
+import { useAuth } from "../auth/AuthContext";
 
 interface ChatboxProps {
+  isGroupChat: boolean;
   handleBack: () => void;
   userToChat: string | null;
+  chatId: string;
   messages: MessageMap;
   setMessage: (message: string) => void;
   message: string;
   sendPrivateMessage: () => void;
-  onlineStatus?: boolean;
+  chatUserObj: UserWithStatus | null;
+  chatGroupObj: OpenChat | null;
 }
 
 export function Chatbox({
+  isGroupChat,
   handleBack,
   userToChat,
+  chatId,
   messages,
   setMessage,
   message,
   sendPrivateMessage,
-  onlineStatus = false,
+  chatUserObj,
+  chatGroupObj,
 }: ChatboxProps) {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { uid } = useAuth();
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView();
+  }, [messages, userToChat]);
+
   return (
     <div className="flex-1 flex flex-col p-6 bg-background">
       <div className="text-center relative">
@@ -31,41 +46,78 @@ export function Chatbox({
           <p className="text-xl">Back</p>
         </div>
         <div className="flex items-center justify-center mb-4 gap-4">
-          <h1 className="text-2xl font-bold">{userToChat?.split(":")[1]}</h1>
-          {userToChat && (
+          <h1 className="text-2xl font-bold">
+            {chatUserObj?.uid_name.split(":")[1]}
+            {isGroupChat && chatGroupObj?.chatName}
+          </h1>
+          {chatUserObj && (
             <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  onlineStatus ? "bg-green-500" : "bg-gray-400"
+                  chatUserObj.online ? "bg-green-500" : "bg-gray-400"
                 }`}
               ></span>
-              <span>{onlineStatus ? "Online" : "Offline"}</span>
+              <span>{chatUserObj.online ? "Online" : "Offline"}</span>
             </div>
           )}
         </div>
       </div>
 
-      {userToChat && (
+      {userToChat && !isGroupChat ? (
         <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
           {(messages[userToChat]?.messages || []).map((msg, index) => (
             <div
               key={index}
               className={`flex ${
-                msg.username === userToChat ? "justify-start" : "justify-end"
+                msg.uid === userToChat ? "justify-start" : "justify-end"
               }`}
             >
               <div
                 key={index}
-                className={`max-w-xs p-3 rounded-lg ${
-                  msg.username === userToChat
-                    ? "bg-gray-200"
-                    : "bg-primary-light"
+                className={`max-w-sm p-3 rounded-lg break-words relative mt-3 ${
+                  msg.uid === userToChat ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >
+                <p
+                  className={`absolute text-sm text-gray-400 -top-5 ${
+                    msg.uid === userToChat ? " left-1" : "right-1"
+                  }`}
+                >
+                  {msg.username}
+                </p>
                 {msg.message}
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
+          {(messages[chatId]?.messages || []).map((msg, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                msg.uid !== uid ? "justify-start" : "justify-end"
+              }`}
+            >
+              <div
+                key={index}
+                className={`max-w-xs p-3 rounded-lg break-words relative mt-3 ${
+                  msg.uid !== uid ? "bg-gray-200" : "bg-primary-light"
+                }`}
+              >
+                <p
+                  className={`absolute text-sm text-gray-400 -top-5 ${
+                    msg.uid !== uid ? " left-1" : "right-1"
+                  }`}
+                >
+                  {msg.username}
+                </p>
+                {msg.message}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
       )}
 

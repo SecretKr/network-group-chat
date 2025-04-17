@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 import { LoginPage } from "./components/Login-Page";
@@ -10,10 +10,15 @@ import {
   handleUserToChat,
   sendPrivateMessage,
   mergeOnlineStatus,
+  handleGroupToChat,
 } from "./utils/chatHelpers";
+import { CreateGroupModal } from "./components/CreateGroupModal";
+import { AllGroupModal } from "./components/AllGroupModal";
 
 export type Message = {
+  chatId?: string;
   username?: string;
+  uid?: string;
   message: string;
   read: boolean;
 };
@@ -30,22 +35,32 @@ export type UserWithStatus = {
   online: boolean;
 };
 
+export type OpenChat = {
+  chatId: string;
+  chatName: string;
+};
+
+export const socket = io(process.env.REACT_APP_BACKEND_URL);
+
 const MainPage = () => {
-  const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<MessageMap>({});
   const [userList, setUserList] = useState<UserWithStatus[]>([]);
+  const [myOpenChatList, setMyOpenChatList] = useState<OpenChat[]>([]);
   const userListRef = useRef<UserWithStatus[]>([]);
   const pendingSocketUsersRef = useRef<string[] | null>(null);
   const [chatUsersReady, setChatUsersReady] = useState(false);
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showAllGroupModal, setShowAllGroupModal] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
   const handleBack = () => {
     setUserToChat("");
+    setChatId("");
     setSelectedChat(false);
   };
 
@@ -62,6 +77,17 @@ const MainPage = () => {
     );
   };
 
+  const onGroupSelect = (chatId: string) => {
+    handleGroupToChat(
+      chatId,
+      token,
+      setUserToChat,
+      setSelectedChat,
+      setChatId,
+      setMessages
+    );
+  };
+
   const onSendPrivateMessage = () => {
     sendPrivateMessage(
       userToChat,
@@ -69,7 +95,7 @@ const MainPage = () => {
       uid,
       socket,
       chatId,
-      token,
+      name,
       setMessage,
       setMessages
     );
@@ -116,8 +142,9 @@ const MainPage = () => {
   useEffect(() => {
     if (loggedIn && uid) {
       socket.emit("setUsername", `${uid}:${name}`);
+      console.log("Socket connection established with UID:", uid);
     }
-  }, [loggedIn, uid, name, socket]);
+  }, [loggedIn, uid, name]);
 
   useEffect(() => {
     socket.on("userList", (onlineUsers: string[]) => {
@@ -133,13 +160,20 @@ const MainPage = () => {
       }
     });
 
+    socket.on("myOpenChatList", (userChats: OpenChat[]) => {
+      setMyOpenChatList(userChats);
+    });
+
     socket.on("receiveMessage", (data) => {
-      const fromUser = data.username;
+      console.log("Received message:", data);
+      const fromUser = data.senderId;
       const isActiveChat = fromUser === userToChat;
+      if (uid === fromUser) return;
 
       const newMessage: Message = {
-        username: fromUser,
-        message: data.message,
+        uid: fromUser,
+        username: data.username,
+        message: data.text,
         read: isActiveChat,
       };
 
@@ -155,15 +189,49 @@ const MainPage = () => {
       });
     });
 
+    socket.on("receiveGroupMessage", (data) => {
+      console.log("Received message:", data);
+      const fromUser = data.senderId;
+      const isActiveGroup = chatId === data.chatId && !userToChat;
+      if (uid === fromUser) return;
+
+      const newMessage: Message = {
+        chatId: chatId,
+        uid: fromUser,
+        username: data.username,
+        message: data.text,
+        read: isActiveGroup,
+      };
+
+      setMessages((prev) => {
+        const existing = prev[chatId] || { messages: [], unread: 0 };
+        return {
+          ...prev,
+          [chatId]: {
+            messages: [...existing.messages, newMessage],
+            unread: isActiveGroup ? 0 : existing.unread + 1,
+          },
+        };
+      });
+    });
+
     return () => {
       socket.off("userList");
       socket.off("receiveMessage");
+      socket.off("myOpenChatList");
+      socket.off("receiveGroupMessage");
     };
-  }, [socket, uid, userToChat, chatUsersReady]);
+  }, [uid, userToChat, chatUsersReady, chatId]);
 
-  const getUnreadCount = (user: string) => messages[user]?.unread || 0;
-  const chatUserObj = userList.find((u) => u.uid_name === userToChat);
-  const onlineStatus = chatUserObj?.online;
+  const getUnreadCount = (uid: string) => messages[uid]?.unread || 0;
+  const chatUserObj = userList.find(
+    (u) => u.uid_name.split(":")[0] === userToChat
+  );
+  const chatGroupObj = myOpenChatList.find((g) => g.chatId === chatId) || null;
+
+  socket.on("chatListUpdate", (userChats) => {
+    console.log("🔔 Received updated chat list:", userChats);
+  });
 
   if (!loggedIn) return <LoginPage />;
 
@@ -171,20 +239,38 @@ const MainPage = () => {
     <div className="w-screen h-screen flex bg-white">
       <Sidebar
         userList={userList}
+        openChatList={myOpenChatList}
         username={name}
         setUserToChat={onUserSelect}
+        setGroupToChat={onGroupSelect}
         userToChat={userToChat}
+        setChatId={setChatId}
+        chatId={chatId}
         getUnreadCount={getUnreadCount}
+        showAllGroupModal={() => setShowAllGroupModal(true)}
+        showCreateGroupModal={() => setShowCreateGroupModal(true)}
       />
+      {showAllGroupModal && (
+        <AllGroupModal
+          onClose={() => setShowAllGroupModal(false)}
+          myOpenChatList={myOpenChatList}
+        />
+      )}
+      {showCreateGroupModal && (
+        <CreateGroupModal onClose={() => setShowCreateGroupModal(false)} />
+      )}
       {selectedChat && (
         <Chatbox
+          isGroupChat={userToChat === "" && chatId !== ""}
           handleBack={handleBack}
           userToChat={userToChat}
+          chatId={chatId}
           messages={messages}
           setMessage={setMessage}
           message={message}
           sendPrivateMessage={onSendPrivateMessage}
-          onlineStatus={onlineStatus}
+          chatUserObj={chatUserObj || null}
+          chatGroupObj={chatGroupObj || null}
         />
       )}
     </div>
