@@ -1,23 +1,27 @@
 import { useAuth } from "../auth/AuthContext";
-import { UserWithStatus } from "../MainPage";
+import { OpenChat, UserWithStatus } from "../MainPage";
 import { cn } from "../utils/utils";
 
 interface SidebarProps {
   userList: UserWithStatus[];
+  openChatList: OpenChat[];
   username: string;
   setUserToChat: (user: string) => void;
   userToChat: string;
   getUnreadCount: (user: string) => number;
-  showPopup: () => void;
+  showAllGroupModal: () => void;
+  showCreateGroupModal: () => void;
 }
 
 export function Sidebar({
   userList,
+  openChatList,
   username,
   setUserToChat,
   userToChat,
   getUnreadCount,
-  showPopup
+  showAllGroupModal,
+  showCreateGroupModal,
 }: SidebarProps) {
   const { logout } = useAuth();
   const sortedUserList = [...userList].sort((a, b) =>
@@ -28,57 +32,100 @@ export function Sidebar({
     <div
       className={
         cn(
-          "w-full md:w-96 border-r border-gray-300 bg-background p-4 overflow-y-auto md:block"
+          "flex flex-col w-full md:w-96 border-r border-gray-300 bg-background overflow-y-auto md:block"
         ) + (userToChat && " hidden")
       }
     >
-      <div className="p-2">
-        <div className="flex justify-between items-center mb-4">
+      <div className="p-4 border-b border-gray-300">
+        <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">{username}</h2>
           <button
-            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold p-2 rounded-md transition"
+            className="bg-primary hover:bg-accent text-white font-semibold p-2 rounded-md transition"
             onClick={logout}
           >
             Logout
           </button>
         </div>
-        <button 
+      </div>
+      <div className="min-h-[calc(100dvh-73px-73px)]">
+        <div className="flex flex-col p-4">
+          {sortedUserList.length && (
+            <h2 className="text-2xl font-bold pb-4 text-center">Direct Chat</h2>
+          )}
+          <ul className="rounded-lg overflow-hidden divide-y divide-hover">
+            {sortedUserList
+              .filter((user) => user.uid_name !== username)
+              .map((user, index) => (
+                <li
+                  key={index}
+                  onClick={() => setUserToChat(user.uid_name.split(":")[0])}
+                  className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition ${
+                    userToChat === user.uid_name.split(":")[0]
+                      ? "bg-primary-light"
+                      : "bg-white hover:bg-hover"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        user.online ? "bg-green-500" : "bg-gray-400"
+                      }`}
+                    ></span>
+                    <p>{user.uid_name.split(":")[1]}</p>
+                  </div>
+                  {getUnreadCount(user.uid_name.split(":")[0]) > 0 && (
+                    <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
+                      <p className="">
+                        {getUnreadCount(user.uid_name.split(":")[0])}
+                      </p>
+                    </div>
+                  )}
+                </li>
+              ))}
+          </ul>
+          <h2 className="text-2xl font-bold py-4 text-center">My OpenChat</h2>
+          <ul className="rounded-lg overflow-hidden divide-y divide-hover">
+            {openChatList.map((openChat) => (
+              <li
+                key={openChat.chatId}
+                // onClick={() => setUserToChat(user.uid_name)}
+                className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white hover:bg-hover`}
+              >
+                <div className="flex items-center gap-2">
+                  {/* <span
+                    className={`w-2 h-2 rounded-full ${
+                      user.online ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  ></span> */}
+                  <p>
+                    {openChat.chatName}
+                    {/* {openChat.split(":")[1]} */}
+                  </p>
+                </div>
+                {/* {getUnreadCount(user.uid_name) > 0 && (
+                  <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
+                    <p className="">{getUnreadCount(user.uid_name)}</p>
+                  </div>
+                )} */}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="p-4 flex gap-4">
+        <button
           className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
-          onClick={showPopup}
+          onClick={showCreateGroupModal}
         >
-          Create Chat Group
+          Create OpenChat
+        </button>
+        <button
+          className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+          onClick={showAllGroupModal}
+        >
+          All OpenChat
         </button>
       </div>
-      <h2 className="text-2xl font-bold mb-4 text-center">Direct Chat</h2>
-      <ul className="rounded-lg overflow-hidden divide-y divide-hover">
-        {sortedUserList
-          .filter((user) => user.uid_name !== username)
-          .map((user, index) => (
-            <li
-              key={index}
-              onClick={() => setUserToChat(user.uid_name)}
-              className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition ${
-                userToChat === user.uid_name
-                  ? "bg-primary-light"
-                  : "bg-white hover:bg-hover"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    user.online ? "bg-green-500" : "bg-gray-400"
-                  }`}
-                ></span>
-                <p>{user.uid_name.split(":")[1]}</p>
-              </div>
-              {getUnreadCount(user.uid_name) > 0 && (
-                <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                  <p className="">{getUnreadCount(user.uid_name)}</p>
-                </div>
-              )}
-            </li>
-          ))}
-      </ul>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { MessageMap } from "../MainPage";
+import { MessageMap, UserWithStatus } from "../MainPage";
 
 interface ChatboxProps {
   handleBack: () => void;
@@ -8,7 +8,7 @@ interface ChatboxProps {
   setMessage: (message: string) => void;
   message: string;
   sendPrivateMessage: () => void;
-  onlineStatus?: boolean;
+  chatUserObj: UserWithStatus | null;
 }
 
 export function Chatbox({
@@ -18,7 +18,7 @@ export function Chatbox({
   setMessage,
   message,
   sendPrivateMessage,
-  onlineStatus = false,
+  chatUserObj,
 }: ChatboxProps) {
   return (
     <div className="flex-1 flex flex-col p-6 bg-background">
@@ -31,15 +31,17 @@ export function Chatbox({
           <p className="text-xl">Back</p>
         </div>
         <div className="flex items-center justify-center mb-4 gap-4">
-          <h1 className="text-2xl font-bold">{userToChat?.split(":")[1]}</h1>
-          {userToChat && (
+          <h1 className="text-2xl font-bold">
+            {chatUserObj?.uid_name.split(":")[1]}
+          </h1>
+          {chatUserObj && (
             <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  onlineStatus ? "bg-green-500" : "bg-gray-400"
+                  chatUserObj.online ? "bg-green-500" : "bg-gray-400"
                 }`}
               ></span>
-              <span>{onlineStatus ? "Online" : "Offline"}</span>
+              <span>{chatUserObj.online ? "Online" : "Offline"}</span>
             </div>
           )}
         </div>

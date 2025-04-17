@@ -93,10 +93,10 @@ export const sendPrivateMessage = async (
     };
   });
 
-  const res = await createMessage(chatId, message, token);
-  res
-    ? toast.success("Create message successfully")
-    : toast.error("Something went wrong");
+  // const res = await createMessage(chatId, message, token);
+  // res
+  //   ? toast.success("Create message successfully")
+  //   : toast.error("Something went wrong");
 
   setMessage("");
 };

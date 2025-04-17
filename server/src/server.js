@@ -13,6 +13,7 @@ import messageRoutes from "./routes/message.js";
 
 import MessageModel from "./models/Message.js";
 import ChatModel from "./models/Chat.js";
+import { broadcastAllOpenChat } from "./utils/socket.js";
 
 dotenv.config();
 connectDB();
@@ -89,6 +90,11 @@ io.on("connection", (socket) => {
 
     console.log(`👤 User ${userId} (${username}) connected.`);
     io.emit("userList", getOnlineUserList());
+    broadcastAllOpenChat();
+  });
+
+  socket.on("getOpenChats", async () => {
+    broadcastAllOpenChat();
   });
 
   socket.on("createChat", async (data) => {
@@ -147,7 +153,7 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async (data) => {
     let { chatId, text } = data;
-    text += "socket";
+    text += " socket";
     const senderId = socketIdToUserId[socket.id];
     console.log(senderId, chatId, text);
     if (!senderId || !chatId || !text) {
@@ -207,3 +213,5 @@ io.on("connection", (socket) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
 });
+
+export { io };

@@ -4,7 +4,6 @@ import io from "socket.io-client";
 import { LoginPage } from "./components/Login-Page";
 import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
-import { Popup } from "./components/Popup";
 import { useAuth } from "./auth/AuthContext";
 import { getPrivateChats } from "./utils/privateChat";
 import {
@@ -13,6 +12,8 @@ import {
   mergeOnlineStatus,
 } from "./utils/chatHelpers";
 import { toast } from "react-toastify";
+import { CreateGroupModal } from "./components/CreateGroupModal";
+import { AllGroupModal } from "./components/AllGroupModal";
 
 export type Message = {
   username?: string;
@@ -32,18 +33,26 @@ export type UserWithStatus = {
   online: boolean;
 };
 
+export type OpenChat = {
+  chatId: string;
+  chatName: string;
+};
+
+export const socket = io(process.env.REACT_APP_BACKEND_URL);
+
 const MainPage = () => {
-  const socket = useMemo(() => io(process.env.REACT_APP_BACKEND_URL), []);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<MessageMap>({});
   const [userList, setUserList] = useState<UserWithStatus[]>([]);
+  const [myOpenChatList, setMyOpenChatList] = useState<OpenChat[]>([]);
   const userListRef = useRef<UserWithStatus[]>([]);
   const pendingSocketUsersRef = useRef<string[] | null>(null);
   const [chatUsersReady, setChatUsersReady] = useState(false);
   const [userToChat, setUserToChat] = useState("");
   const [chatId, setChatId] = useState("");
   const [selectedChat, setSelectedChat] = useState(false);
-  const [shownPopup, setShownPopup] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showAllGroupModal, setShowAllGroupModal] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
@@ -137,14 +146,19 @@ const MainPage = () => {
       }
     });
 
+    socket.on("openChatList", (userChats: OpenChat[]) => {
+      console.log("Received open chat list:", userChats);
+      setMyOpenChatList(userChats);
+    });
+
     socket.on("receiveMessage", (data) => {
       console.log("Received message:", data);
-      const fromUser = data.username;
+      const fromUser = data.senderId;
       const isActiveChat = fromUser === userToChat;
 
       const newMessage: Message = {
         username: fromUser,
-        message: data.message,
+        message: data.text,
         read: isActiveChat,
       };
 
@@ -166,9 +180,10 @@ const MainPage = () => {
     };
   }, [socket, uid, userToChat, chatUsersReady]);
 
-  const getUnreadCount = (user: string) => messages[user]?.unread || 0;
-  const chatUserObj = userList.find((u) => u.uid_name === userToChat);
-  const onlineStatus = chatUserObj?.online;
+  const getUnreadCount = (uid: string) => messages[uid]?.unread || 0;
+  const chatUserObj = userList.find(
+    (u) => u.uid_name.split(":")[0] === userToChat
+  );
 
   const handleCreateChat = () => {
     const memberUIDs = userList.map((user) => {
@@ -210,28 +225,25 @@ const MainPage = () => {
     console.log("🔔 Received updated chat list:", userChats);
   });
 
-  const showPopup = () => {
-    setShownPopup(true);
-  };
-
   if (!loggedIn) return <LoginPage />;
 
   return (
     <div className="w-screen h-screen flex bg-white">
       <Sidebar
         userList={userList}
+        openChatList={myOpenChatList}
         username={name}
         setUserToChat={onUserSelect}
         userToChat={userToChat}
         getUnreadCount={getUnreadCount}
-        showPopup={showPopup}
+        showAllGroupModal={() => setShowAllGroupModal(true)}
+        showCreateGroupModal={() => setShowCreateGroupModal(true)}
       />
-      {shownPopup && (
-        <Popup
-          userList={userList}
-          username={name}
-          onClose={() => setShownPopup(false)}
-        />
+      {showAllGroupModal && (
+        <AllGroupModal onClose={() => setShowAllGroupModal(false)} />
+      )}
+      {showCreateGroupModal && (
+        <CreateGroupModal onClose={() => setShowCreateGroupModal(false)} />
       )}
       {selectedChat && (
         <Chatbox
@@ -241,7 +253,7 @@ const MainPage = () => {
           setMessage={setMessage}
           message={message}
           sendPrivateMessage={onSendPrivateMessage}
-          onlineStatus={onlineStatus}
+          chatUserObj={chatUserObj || null}
         />
       )}
     </div>

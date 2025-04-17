@@ -1,6 +1,7 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Message from "../models/Message.js";
+import { broadcastAllOpenChat } from "../utils/socket.js";
 
 const sanitizeUsers = "-password -createdAt -__v";
 
@@ -110,10 +111,17 @@ export const createChat = async (req, res) => {
 export const createGroupChat = async (req, res) => {
   const { chatName, users } = req.body;
 
-  if (!chatName || !users || !Array.isArray(users) || users.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, msg: "Name and at least one user required" });
+  // if (!chatName || !users || !Array.isArray(users) || users.length === 0) {
+  //   return res
+  //     .status(400)
+  //     .json({ success: false, msg: "Name and at least one user required" });
+  // }
+
+  if (!chatName) {
+    return res.status(400).json({
+      success: false,
+      msg: "Chat name is required",
+    });
   }
 
   if (users.includes(req.user._id.toString())) {
@@ -133,8 +141,11 @@ export const createGroupChat = async (req, res) => {
     const newGroupChat = await Chat.create({
       chatName,
       users: [...users, req.user._id],
+      groupOwner: req.user._id,
       isGroupChat: true,
     });
+
+    broadcastAllOpenChat();
 
     const fullGroupChat = await Chat.findById(newGroupChat._id).populate(
       "users",
