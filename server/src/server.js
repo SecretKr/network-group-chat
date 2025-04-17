@@ -198,6 +198,7 @@ io.on("connection", (socket) => {
               text,
               senderId,
               chatId,
+              username: socketIdToUsername[socket.id],
               createdAt: savedMessage.createdAt,
             });
           } else {
@@ -205,6 +206,7 @@ io.on("connection", (socket) => {
               text,
               senderId,
               chatId,
+              username: socketIdToUsername[socket.id],
               createdAt: savedMessage.createdAt,
             });
           }

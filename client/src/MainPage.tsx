@@ -67,7 +67,6 @@ const MainPage = () => {
   const onUserSelect = (user: string) => {
     handleUserToChat(
       user,
-      userList,
       uid,
       name,
       token,
@@ -81,8 +80,6 @@ const MainPage = () => {
   const onGroupSelect = (chatId: string) => {
     handleGroupToChat(
       chatId,
-      uid,
-      name,
       token,
       setUserToChat,
       setSelectedChat,
@@ -98,7 +95,7 @@ const MainPage = () => {
       uid,
       socket,
       chatId,
-      token,
+      name,
       setMessage,
       setMessages
     );
@@ -171,9 +168,11 @@ const MainPage = () => {
       console.log("Received message:", data);
       const fromUser = data.senderId;
       const isActiveChat = fromUser === userToChat;
+      if (uid === fromUser) return;
 
       const newMessage: Message = {
-        username: fromUser,
+        uid: fromUser,
+        username: data.username,
         message: data.text,
         read: isActiveChat,
       };
@@ -183,7 +182,6 @@ const MainPage = () => {
         return {
           ...prev,
           [fromUser]: {
-            // TODO handle receiveMessage from group chat (use chatId instead of fromUser)
             messages: [...existing.messages, newMessage],
             unread: isActiveChat ? 0 : existing.unread + 1,
           },
@@ -192,21 +190,24 @@ const MainPage = () => {
     });
 
     socket.on("receiveGroupMessage", (data) => {
-      const { chatId: groupId, senderId, text } = data;
-      const isActiveGroup = groupId === chatId && !userToChat;
+      console.log("Received message:", data);
+      const fromUser = data.senderId;
+      const isActiveGroup = chatId === data.chatId && !userToChat;
+      if (uid === fromUser) return;
 
       const newMessage: Message = {
-        chatId: groupId,
-        username: senderId,
-        message: text,
+        chatId: chatId,
+        uid: fromUser,
+        username: data.username,
+        message: data.text,
         read: isActiveGroup,
       };
 
       setMessages((prev) => {
-        const existing = prev[groupId] || { messages: [], unread: 0 };
+        const existing = prev[chatId] || { messages: [], unread: 0 };
         return {
           ...prev,
-          [groupId]: {
+          [chatId]: {
             messages: [...existing.messages, newMessage],
             unread: isActiveGroup ? 0 : existing.unread + 1,
           },

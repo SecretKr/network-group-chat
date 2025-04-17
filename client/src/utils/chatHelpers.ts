@@ -5,7 +5,6 @@ import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust imp
 
 export const handleUserToChat = async (
   user: string,
-  userList: UserWithStatus[],
   uid: string,
   name: string,
   token: string,
@@ -64,8 +63,6 @@ export const handleUserToChat = async (
 
 export const handleGroupToChat = async (
   chatId: string,
-  uid: string,
-  name: string,
   token: string,
   setUserToChat: (user: string) => void,
   setSelectedChat: (val: boolean) => void,
@@ -97,7 +94,7 @@ export const sendPrivateMessage = async (
   uid: string,
   socket: any,
   chatId: string,
-  token: string,
+  name: string,
   setMessage: (val: string) => void,
   setMessages: React.Dispatch<React.SetStateAction<MessageMap>>
 ) => {
@@ -105,7 +102,8 @@ export const sendPrivateMessage = async (
 
   const newMessage: Message = {
     message,
-    username: uid,
+    username: name,
+    uid: uid,
     read: false,
   };
 
