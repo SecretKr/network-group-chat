@@ -4,6 +4,7 @@ import { getMessagesByChatId } from "./message";
 import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust import as needed
 
 const getUsernameFromUid = (
+  // TODO backend send uid along with username
   uid: string | null,
   userList: UserWithStatus[]
 ): string | null => {

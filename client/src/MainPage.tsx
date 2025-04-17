@@ -183,6 +183,7 @@ const MainPage = () => {
         return {
           ...prev,
           [fromUser]: {
+            // TODO handle receiveMessage from group chat (use chatId instead of fromUser)
             messages: [...existing.messages, newMessage],
             unread: isActiveChat ? 0 : existing.unread + 1,
           },
