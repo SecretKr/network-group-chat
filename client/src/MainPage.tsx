@@ -14,6 +14,7 @@ import {
 } from "./utils/chatHelpers";
 import { CreateGroupModal } from "./components/CreateGroupModal";
 import { AllGroupModal } from "./components/AllGroupModal";
+import { AllGroupMember } from "./components/AllGroupMember";
 
 export type Message = {
   chatId?: string;
@@ -55,6 +56,7 @@ const MainPage = () => {
   const [selectedChat, setSelectedChat] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showAllGroupModal, setShowAllGroupModal] = useState(false);
+  const [showAllGroupMember, setShowAllGroupMember] = useState(false);
 
   const { uid, name, token, loggedIn } = useAuth();
 
@@ -259,6 +261,13 @@ const MainPage = () => {
       {showCreateGroupModal && (
         <CreateGroupModal onClose={() => setShowCreateGroupModal(false)} />
       )}
+      {showAllGroupMember && (
+        <AllGroupMember
+          onClose={() => setShowAllGroupMember(false)}
+          chatId={chatId}
+          token={token}
+        />
+      )}
       {selectedChat && (
         <Chatbox
           isGroupChat={userToChat === "" && chatId !== ""}
@@ -271,6 +280,7 @@ const MainPage = () => {
           sendPrivateMessage={onSendPrivateMessage}
           chatUserObj={chatUserObj || null}
           chatGroupObj={chatGroupObj || null}
+          showAllGroupMember={() => setShowAllGroupMember(true)}
         />
       )}
     </div>

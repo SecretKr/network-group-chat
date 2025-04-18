@@ -14,6 +14,7 @@ interface ChatboxProps {
   sendPrivateMessage: () => void;
   chatUserObj: UserWithStatus | null;
   chatGroupObj: OpenChat | null;
+  showAllGroupMember: () => void;
 }
 
 export function Chatbox({
@@ -27,6 +28,7 @@ export function Chatbox({
   sendPrivateMessage,
   chatUserObj,
   chatGroupObj,
+  showAllGroupMember,
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { uid } = useAuth();
@@ -45,7 +47,9 @@ export function Chatbox({
           <Icon icon="weui:back-filled" width="12" height="24" />
           <p className="text-xl">Back</p>
         </div>
-        <div className="flex items-center justify-center mb-4 gap-4">
+        <div className={`flex items-center mb-4 gap-4 ${
+          isGroupChat? "justify-between" : ""}`}
+        >
           <h1 className="text-2xl font-bold">
             {chatUserObj?.uid_name.split(":")[1]}
             {isGroupChat && chatGroupObj?.chatName}
@@ -59,6 +63,14 @@ export function Chatbox({
               ></span>
               <span>{chatUserObj.online ? "Online" : "Offline"}</span>
             </div>
+          )}
+          {isGroupChat && (
+            <button
+              className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+              onClick={showAllGroupMember}
+            >
+              Show All Group Members
+            </button>
           )}
         </div>
       </div>

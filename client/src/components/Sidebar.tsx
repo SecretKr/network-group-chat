@@ -102,18 +102,8 @@ export function Sidebar({
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {/* <span
-                    className={`w-2 h-2 rounded-full ${
-                      user.online ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></span> */}
-                  <p>{openChat.chatName}</p>
+                  <h3>{openChat.chatName}</h3>
                 </div>
-                {/* {getUnreadCount(user.uid_name) > 0 && (
-                  <div className="p-2 bg-primary text-white h-8 flex items-center w-8 justify-center rounded-full font-semibold">
-                    <p className="">{getUnreadCount(user.uid_name)}</p>
-                  </div>
-                )} */}
               </li>
             ))}
           </ul>
@@ -121,13 +111,13 @@ export function Sidebar({
       </div>
       <div className="p-4 flex gap-4">
         <button
-          className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+          className="w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
           onClick={showCreateGroupModal}
         >
           Create OpenChat
         </button>
         <button
-          className=" w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+          className="w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
           onClick={showAllGroupModal}
         >
           All OpenChat
