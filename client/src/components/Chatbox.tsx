@@ -14,6 +14,7 @@ interface ChatboxProps {
   sendPrivateMessage: () => void;
   chatUserObj: UserWithStatus | null;
   chatGroupObj: OpenChat | null;
+  showAllGroupMember: () => void;
 }
 
 export function Chatbox({
@@ -27,6 +28,7 @@ export function Chatbox({
   sendPrivateMessage,
   chatUserObj,
   chatGroupObj,
+  showAllGroupMember,
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { uid } = useAuth();
@@ -36,17 +38,21 @@ export function Chatbox({
   }, [messages, userToChat]);
 
   return (
-    <div className="flex-1 flex flex-col p-6 bg-background">
+    <div className="flex-1 flex flex-col p-4 bg-background">
       <div className="text-center relative">
         <div
-          className="cursor-pointer flex gap-2 items-center text-secondary absolute left-0 w-full md:hidden"
-          onClick={handleBack}
+          className={`flex items-center justify-center mb-4 gap-4 ${
+            isGroupChat ? "justify-between" : ""
+          }`}
         >
-          <Icon icon="weui:back-filled" width="12" height="24" />
-          <p className="text-xl">Back</p>
-        </div>
-        <div className="flex items-center justify-center mb-4 gap-4">
-          <h1 className="text-2xl font-bold">
+          <div
+            className="cursor-pointer flex gap-2 items-center text-secondary  left-0 md:hidden"
+            onClick={handleBack}
+          >
+            <Icon icon="weui:back-filled" width="12" height="24" />
+            <p className="text-xl">Back</p>
+          </div>
+          <h1 className="text-2xl font-bold w-full md:w-auto">
             {chatUserObj?.uid_name.split(":")[1]}
             {isGroupChat && chatGroupObj?.chatName}
           </h1>
@@ -59,6 +65,14 @@ export function Chatbox({
               ></span>
               <span>{chatUserObj.online ? "Online" : "Offline"}</span>
             </div>
+          )}
+          {isGroupChat && (
+            <button
+              className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
+              onClick={showAllGroupMember}
+            >
+              Members
+            </button>
           )}
         </div>
       </div>
@@ -74,7 +88,7 @@ export function Chatbox({
             >
               <div
                 key={index}
-                className={`max-w-sm p-3 rounded-lg break-words relative mt-3 ${
+                className={`max-w-64 md:max-w-sm p-3 rounded-lg break-words relative mt-3 ${
                   msg.uid === userToChat ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >
@@ -102,7 +116,7 @@ export function Chatbox({
             >
               <div
                 key={index}
-                className={`max-w-xs p-3 rounded-lg break-words relative mt-3 ${
+                className={`max-w-64 md:max-w-sm p-3 rounded-lg break-words relative mt-3 ${
                   msg.uid !== uid ? "bg-gray-200" : "bg-primary-light"
                 }`}
               >

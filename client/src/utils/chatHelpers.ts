@@ -27,11 +27,11 @@ export const handleUserToChat = async (
   if (foundChat) {
     chatIdLocal = foundChat._id;
     setChatId(chatIdLocal);
-    toast.success("Join private chat successfully");
+    //toast.success("Join private chat successfully");
   } else {
     const res = await createPrivateChat(user, token);
     if (res) {
-      toast.success("Create private chat successfully");
+      //toast.success("Create private chat successfully");
       chats = await getPrivateChats(token);
       foundChat = chats?.find((chat) =>
         chat.users.some((u) => u._id === targetUserId)

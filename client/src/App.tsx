@@ -38,7 +38,11 @@ const App = () => {
           </p>
         </div>
       )}
-      <ToastContainer position="bottom-right" hideProgressBar={true} />
+      <ToastContainer
+        className="hidden md:block"
+        position="bottom-right"
+        hideProgressBar={true}
+      />
     </div>
   );
 };
