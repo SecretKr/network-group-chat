@@ -1,4 +1,4 @@
-import { getApiV1ChatById } from "../generated/api";
+import { getApiV1ChatById, putApiV1ChatByIdLeave } from "../generated/api";
 import { User, Chat } from "../utils/privateChat";
 
 export const getGroupMemberById = async (
@@ -54,30 +54,57 @@ export const getGroupMemberById = async (
         console.error("Error getting chat:", err);
         return error_res;
     }
-};
-export const leaveOpenChat = async (chatId:string) => {
-    if (!chatId) return;
-  
-    try {
-      const response = await fetch(`/api/chat/${chatId}/leave`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", 
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const result = await response.json();
-      console.log("Successfully left group chat:", result);
-  
-  
-    } catch (error) {
-      console.error("Failed to leave group chat", error);
-      alert("Failed to leave the group. Please try again.");
+};export const leaveOpenChat = async (chatId: string, token: string): Promise<any> => {
+    const error_res = "Failed to leave the group chat"; // Default error response
+
+    if (!chatId || !token) {
+        console.error("Missing chatId or token");
+        return error_res;
     }
-  };
-  
+
+    try {
+        console.log("Attempting to leave chat with ID:", chatId);
+
+        // Send request to leave chat
+        const res = await fetch(`/api/v1/chat/${chatId}/leave`, {
+            method: "PUT", // Assuming PUT method
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        // Check for non-JSON responses (e.g., HTML error page)
+        if (!res.ok) {
+            const errorText = await res.text(); // Get the raw response text
+            console.error(`Error response: ${errorText}`);
+            return error_res;
+        }
+
+        // Try parsing the JSON response
+        try {
+            const data = await res.json(); // Parse the JSON response
+            console.log("Successfully left group chat:", data);
+            return data;
+        } catch (jsonError) {
+            console.error("Failed to parse JSON response:", jsonError);
+            return error_res;
+        }
+
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            // Handle the error as an instance of Error
+            console.error("Error leaving group chat:", err);
+
+            if (err.message === "Failed to fetch") {
+                console.error("Network error: Failed to fetch. Check your network connection or CORS issues.");
+            }
+
+            alert(`Failed to leave the group. Error: ${err.message}`);
+        } else {
+            // Handle the case where the error is not an instance of Error
+            console.error("Unknown error:", err);
+        }
+
+        return error_res;
+    }
+};

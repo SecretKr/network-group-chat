@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { leaveOpenChat as leaveOpenChatAPI } from "../utils/groupChat";
 
+
 interface ChatboxProps {
   isGroupChat: boolean;
   handleBack: () => void;
@@ -32,17 +33,28 @@ export function Chatbox({
   showAllGroupMember,
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const { uid } = useAuth();
-  const leaveOpenChat = async () => {
+  // const { uid } = useAuth();
+  const { uid, name, token, loggedIn } = useAuth();
+
+  const handleLeaveChat = async () => {
     try {
-      await leaveOpenChatAPI(chatId);
-      console.log("Successfully left group chat");
+      const response = await fetch(`/api/v1/chat/${chatId}/leave`, {
+        method: 'PUT',  // Use 'PUT' as you're updating data (removing a user)
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,  // Assuming `userToken` is the JWT token for authentication
+        },
+        body: JSON.stringify({}),  // No need to send any data in the body for this operation
+      });
+  
+      const data = await response.json();
+  
     } catch (error) {
-      console.error("Failed to leave group chat", error);
-      alert("Failed to leave the group. Please try again.");
+      console.error("Failed to leave chat:", error);
+      alert("An error occurred while trying to leave the chat.");
     }
   };
-
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
   }, [messages, userToChat]);
@@ -86,7 +98,7 @@ export function Chatbox({
               </button>
               <button
                 className="bg-red-500 text-white font-semibold p-4 rounded-md hover:bg-red-600 transition"
-                onClick={leaveOpenChat}
+                onClick={handleLeaveChat}
               >
                 Leave Group
               </button>
