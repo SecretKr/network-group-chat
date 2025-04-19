@@ -58,7 +58,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // Helper functions
-function getSocketIdByUserId(userId) {
+export function getSocketIdByUserId(userId) {
   return Object.keys(socketIdToUserId).find(
     (socketId) => socketIdToUserId[socketId] === userId
   );
@@ -146,6 +146,7 @@ io.on("connection", (socket) => {
             }).populate("users", "_id username");
             console.log("userchat", targetSocketId);
             io.to(targetSocketId).emit("myOpenChatList", userChats);
+            await broadcastMyOpenChats(userId, socket);
             await broadcastAllOpenChat();
           } catch (err) {
             console.error(
