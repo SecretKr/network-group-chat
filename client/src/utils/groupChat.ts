@@ -4,10 +4,8 @@ import { User, Chat } from "../utils/privateChat";
 export const getGroupMemberById = async (
   chatId: string,
   token: string
-): Promise<User[]> => {
-  const error_res: User[] = [];
-
-  if (!token) return error_res;
+): Promise<{ groupOwner: string | undefined; users: User[] } | null> => {
+  if (!token) return null;
 
   try {
     console.log("Getting chat...");
@@ -21,12 +19,12 @@ export const getGroupMemberById = async (
     });
 
     if (res.response.status === 404) {
-      return error_res;
+      return null;
     }
 
     if (!res.data) {
       console.error("Error getting chat:", res);
-      return error_res;
+      return null;
     }
 
     const data: any = res.data;
@@ -49,10 +47,10 @@ export const getGroupMemberById = async (
       });
     }
 
-    return users;
+    return { groupOwner: data.groupOwner, users: users };
   } catch (err) {
     console.error("Error getting chat:", err);
-    return error_res;
+    return null;
   }
 };
 export const leaveOpenChat = async (

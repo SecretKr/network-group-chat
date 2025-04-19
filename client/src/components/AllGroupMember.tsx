@@ -1,6 +1,8 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { getGroupMemberById } from "../utils/groupChat";
+import { useAuth } from "../auth/AuthContext";
+import { User } from "../utils/privateChat";
 
 interface AllGroupMemberProps {
   onClose: () => void;
@@ -15,16 +17,16 @@ export function AllGroupMember({
   chatId,
   token,
 }: AllGroupMemberProps) {
-  const [allMemberList, setAllMemberList] = useState<string[]>([]);
+  const [allMemberList, setAllMemberList] = useState<User[]>([]);
+  const [owner, setOwner] = useState<string>("");
+  const { uid } = useAuth();
 
   useEffect(() => {
     const fetchChatMembers = async () => {
       const res = await getGroupMemberById(chatId, token);
-      const members: string[] = [];
-      res?.forEach((member) => {
-        members.push(member.nickname);
-      });
-      members.sort();
+      setOwner(res?.groupOwner || "");
+      const members: User[] = res?.users || [];
+      members.sort((a, b) => a.nickname.localeCompare(b.nickname));
       setAllMemberList(members);
     };
     fetchChatMembers();
@@ -50,11 +52,17 @@ export function AllGroupMember({
           <ul className="rounded-lg overflow-hidden divide-y divide-hover">
             {allMemberList.map((member) => (
               <li
+                key={member._id}
                 className={`cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white`}
               >
                 <div className="flex items-center gap-2">
-                  <p>{member}</p>
+                  <p>
+                    {member.nickname} {member._id === uid && "(Me)"}
+                  </p>
                 </div>
+                <p className="text-gray-400">
+                  {member._id === owner && "Owner"}
+                </p>
               </li>
             ))}
           </ul>
@@ -68,7 +76,7 @@ export function AllGroupMember({
             onClose();
           }}
         >
-          Leave Group
+          {owner === uid ? "Delete Group" : "Leave Group"}
         </button>
       </div>
     </div>
