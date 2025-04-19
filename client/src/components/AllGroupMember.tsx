@@ -4,12 +4,14 @@ import { getGroupMemberById } from "../utils/groupChat";
 
 interface AllGroupMemberProps {
   onClose: () => void;
+  handleLeaveChat: () => void;
   chatId: string;
   token: string;
 }
 
 export function AllGroupMember({
   onClose,
+  handleLeaveChat,
   chatId,
   token,
 }: AllGroupMemberProps) {
@@ -59,6 +61,15 @@ export function AllGroupMember({
         ) : (
           <ul className="rounded-lg overflow-hidden divide-y divide-hover"></ul>
         )}
+        <button
+          className="bg-red-500 text-white font-semibold p-2 rounded-md hover:bg-red-600 transition"
+          onClick={() => {
+            handleLeaveChat();
+            onClose();
+          }}
+        >
+          Leave Group
+        </button>
       </div>
     </div>
   );

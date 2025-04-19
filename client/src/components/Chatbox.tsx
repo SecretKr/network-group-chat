@@ -67,12 +67,14 @@ export function Chatbox({
             </div>
           )}
           {isGroupChat && (
-            <button
-              className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
-              onClick={showAllGroupMember}
-            >
-              Members
-            </button>
+            <div className="flex gap-3 ">
+              <button
+                className="bg-primary text-white font-semibold p-1 rounded-md hover:bg-primary-dark transition"
+                onClick={showAllGroupMember}
+              >
+                <Icon icon="ic:round-menu" className="size-8 text-white" />
+              </button>
+            </div>
           )}
         </div>
       </div>

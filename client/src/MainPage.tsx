@@ -15,6 +15,7 @@ import {
 import { CreateGroupModal } from "./components/CreateGroupModal";
 import { AllGroupModal } from "./components/AllGroupModal";
 import { AllGroupMember } from "./components/AllGroupMember";
+import { putApiV1ChatByIdLeave } from "./generated/api";
 
 export type Message = {
   chatId?: string;
@@ -64,6 +65,27 @@ const MainPage = () => {
     setUserToChat("");
     setChatId("");
     setSelectedChat(false);
+  };
+
+  const handleLeaveChat = async () => {
+    try {
+      await putApiV1ChatByIdLeave({
+        path: {
+          id: chatId,
+        },
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMyOpenChatList((prev) =>
+        prev.filter((chat) => chat.chatId !== chatId)
+      );
+      handleBack();
+    } catch (error) {
+      console.error("Failed to leave chat:", error);
+      alert("An error occurred while trying to leave the chat.");
+    }
   };
 
   const onUserSelect = (user: string) => {
@@ -264,6 +286,7 @@ const MainPage = () => {
       {showAllGroupMember && (
         <AllGroupMember
           onClose={() => setShowAllGroupMember(false)}
+          handleLeaveChat={handleLeaveChat}
           chatId={chatId}
           token={token}
         />
