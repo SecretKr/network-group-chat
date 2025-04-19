@@ -2,6 +2,7 @@ import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Message from "../models/Message.js";
 import { broadcastAllOpenChat, broadcastMyOpenChats } from "../utils/socket.js";
+import { getSocketIdByUserId, io } from "../server.js";
 
 const sanitizeUsers = "-password -createdAt -__v";
 
@@ -293,7 +294,19 @@ export const leaveChat = async (req, res) => {
       chat.isGroupChat &&
       chat.groupOwner?.toString() === req.user._id.toString()
     ) {
+      const members = chat.users.filter(
+        (userId) => userId.toString() !== req.user._id.toString()
+      );
       await chat.deleteOne();
+      members.forEach(async (userId) => {
+        const targetSocketId = getSocketIdByUserId(userId.toString());
+        if (targetSocketId) {
+          await broadcastMyOpenChats(userId, io.to(targetSocketId));
+        } else {
+          console.warn(`⚠️ No active socket for UID ${userId}`);
+        }
+      });
+      await broadcastAllOpenChat();
       return res
         .status(200)
         .json({ success: true, msg: "Group chat deleted because owner left" });

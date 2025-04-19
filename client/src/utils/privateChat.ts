@@ -10,6 +10,7 @@ export interface Chat {
   chatName: string;
   createdAt: string;
   isGroupChat: boolean;
+  groupOwner?: string;
   users: User[];
   __v: number;
   _id: string;
