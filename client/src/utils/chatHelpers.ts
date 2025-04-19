@@ -1,8 +1,7 @@
 import { toast } from "react-toastify";
 import { createPrivateChat, getPrivateChats } from "./privateChat";
 import { getMessagesByChatId } from "./message";
-import { Message, MessageMap, UserWithStatus } from "../MainPage"; // adjust import as needed
-import { setFips } from "crypto";
+import { Message, MessageMap, UserWithStatus } from "../MainPage";
 
 export const handleUserToChat = async (
   user: string,
