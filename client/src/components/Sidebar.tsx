@@ -39,7 +39,7 @@ export function Sidebar({
       className={
         cn(
           "flex flex-col w-full md:w-96 border-r border-gray-300 bg-background overflow-y-auto md:block"
-        ) + (userToChat && " hidden")
+        ) + ((userToChat || chatId) && " hidden")
       }
     >
       <div className="p-4 border-b border-gray-300">
