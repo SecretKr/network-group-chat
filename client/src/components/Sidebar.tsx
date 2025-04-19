@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { OpenChat, UserWithStatus } from "../MainPage";
 import { cn } from "../utils/utils";
@@ -30,9 +31,16 @@ export function Sidebar({
   showCreateGroupModal,
 }: SidebarProps) {
   const { logout } = useAuth();
+  const [showAllUsers, setShowAllUsers] = useState(false);
+  const MAX_USERS_DISPLAYED = 5;
+
   const sortedUserList = [...userList].sort((a, b) =>
     a.online === b.online ? 0 : a.online ? -1 : 1
   );
+
+  const usersToDisplay = showAllUsers
+    ? sortedUserList
+    : sortedUserList.slice(0, MAX_USERS_DISPLAYED);
 
   return (
     <div
@@ -53,13 +61,13 @@ export function Sidebar({
           </button>
         </div>
       </div>
-      <div className="min-h-[calc(100dvh-73px-73px)]">
+      <div className="min-h-[calc(100dvh-73px-73px)] max-h-[calc(100dvh-73px-73px)] overflow-auto">
         <div className="flex flex-col p-4">
           {sortedUserList.length > 0 && (
             <h2 className="text-2xl font-bold pb-4 text-center">Direct Chat</h2>
           )}
           <ul className="rounded-lg overflow-hidden divide-y divide-hover">
-            {sortedUserList
+            {usersToDisplay
               .filter((user) => user.uid_name !== username)
               .map((user, index) => (
                 <li
@@ -89,6 +97,15 @@ export function Sidebar({
                 </li>
               ))}
           </ul>
+          {sortedUserList.length > MAX_USERS_DISPLAYED && (
+            <button
+              className="text-gray-500 underline my-4 hover:underline text-sm font-medium self-center"
+              onClick={() => setShowAllUsers(!showAllUsers)}
+            >
+              {showAllUsers ? "Show Less" : "Show More"}
+            </button>
+          )}
+
           <h2 className="text-2xl font-bold py-4 text-center">My OpenChat</h2>
           <ul className="rounded-lg overflow-hidden divide-y divide-hover">
             {openChatList.map((openChat) => (
@@ -109,7 +126,7 @@ export function Sidebar({
           </ul>
         </div>
       </div>
-      <div className="p-4 flex gap-4">
+      <div className="p-4 flex gap-4 border-t border-gray-300">
         <button
           className="w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
           onClick={showCreateGroupModal}
