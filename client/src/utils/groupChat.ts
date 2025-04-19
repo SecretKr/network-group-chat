@@ -55,3 +55,29 @@ export const getGroupMemberById = async (
         return error_res;
     }
 };
+export const leaveOpenChat = async (chatId:string) => {
+    if (!chatId) return;
+  
+    try {
+      const response = await fetch(`/api/chat/${chatId}/leave`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", 
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log("Successfully left group chat:", result);
+  
+  
+    } catch (error) {
+      console.error("Failed to leave group chat", error);
+      alert("Failed to leave the group. Please try again.");
+    }
+  };
+  

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { MessageMap, OpenChat, UserWithStatus } from "../MainPage";
 import { useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { leaveOpenChat as leaveOpenChatAPI } from "../utils/groupChat";
 
 interface ChatboxProps {
   isGroupChat: boolean;
@@ -32,6 +33,15 @@ export function Chatbox({
 }: ChatboxProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { uid } = useAuth();
+  const leaveOpenChat = async () => {
+    try {
+      await leaveOpenChatAPI(chatId);
+      console.log("Successfully left group chat");
+    } catch (error) {
+      console.error("Failed to leave group chat", error);
+      alert("Failed to leave the group. Please try again.");
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
@@ -67,12 +77,20 @@ export function Chatbox({
             </div>
           )}
           {isGroupChat && (
-            <button
-              className="bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"
-              onClick={showAllGroupMember}
-            >
-              Members
-            </button>
+            <div className="flex gap-3 ">
+              <button
+                className="bg-primary text-white font-semibold p-4 rounded-md hover:bg-primary-dark transition"
+                onClick={showAllGroupMember}
+              >
+                Members
+              </button>
+              <button
+                className="bg-red-500 text-white font-semibold p-4 rounded-md hover:bg-red-600 transition"
+                onClick={leaveOpenChat}
+              >
+                Leave Group
+              </button>
+            </div>
           )}
         </div>
       </div>
