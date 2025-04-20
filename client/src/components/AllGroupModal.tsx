@@ -1,13 +1,14 @@
 import { Icon } from "@iconify/react";
-import { OpenChat, socket } from "../MainPage";
+import { socket } from "../MainPage";
 import { useEffect, useState } from "react";
+import { OpenChat, useChat } from "../utils/ChatContext";
 
 interface AllGroupModalProps {
   onClose: () => void;
-  myOpenChatList: OpenChat[];
 }
 
-export function AllGroupModal({ onClose, myOpenChatList }: AllGroupModalProps) {
+export function AllGroupModal({ onClose }: AllGroupModalProps) {
+  const { myOpenChatList } = useChat();
   const [allOpenChatList, setAllOpenChatList] = useState<OpenChat[]>([]);
 
   useEffect(() => {

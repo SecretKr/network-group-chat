@@ -3,23 +3,17 @@ import { useEffect, useState } from "react";
 import { getGroupMemberById } from "../utils/groupChat";
 import { useAuth } from "../auth/AuthContext";
 import { User } from "../utils/privateChat";
+import { useChat } from "../utils/ChatContext";
 
 interface AllGroupMemberProps {
   onClose: () => void;
-  handleLeaveChat: () => void;
-  chatId: string;
-  token: string;
 }
 
-export function AllGroupMember({
-  onClose,
-  handleLeaveChat,
-  chatId,
-  token,
-}: AllGroupMemberProps) {
+export function AllGroupMember({ onClose }: AllGroupMemberProps) {
   const [allMemberList, setAllMemberList] = useState<User[]>([]);
   const [owner, setOwner] = useState<string>("");
-  const { uid } = useAuth();
+  const { uid, token } = useAuth();
+  const { chatId, handleLeaveChat } = useChat();
 
   useEffect(() => {
     const fetchChatMembers = async () => {

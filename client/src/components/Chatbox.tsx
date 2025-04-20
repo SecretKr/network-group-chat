@@ -1,37 +1,36 @@
 import { Icon } from "@iconify/react";
-import { MessageMap, OpenChat, UserWithStatus } from "../MainPage";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useChat } from "../utils/ChatContext";
 
 interface ChatboxProps {
-  isGroupChat: boolean;
-  handleBack: () => void;
-  userToChat: string | null;
-  chatId: string;
-  messages: MessageMap;
-  setMessage: (message: string) => void;
-  message: string;
-  sendPrivateMessage: () => void;
-  chatUserObj: UserWithStatus | null;
-  chatGroupObj: OpenChat | null;
   showAllGroupMember: () => void;
 }
 
-export function Chatbox({
-  isGroupChat,
-  handleBack,
-  userToChat,
-  chatId,
-  messages,
-  setMessage,
-  message,
-  sendPrivateMessage,
-  chatUserObj,
-  chatGroupObj,
-  showAllGroupMember,
-}: ChatboxProps) {
+export function Chatbox({ showAllGroupMember }: ChatboxProps) {
+  const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { uid } = useAuth();
+  const {
+    messages,
+    userList,
+    myOpenChatList,
+    chatId,
+    userToChat,
+    handleSendMessage,
+    handleBack,
+  } = useChat();
+
+  const isGroupChat = userToChat === "" && chatId !== "";
+  const chatUserObj = userList.find(
+    (u) => u.uid_name.split(":")[0] === userToChat
+  );
+  const chatGroupObj = myOpenChatList.find((g) => g.chatId === chatId) || null;
+
+  const onSendMessage = () => {
+    handleSendMessage(message);
+    setMessage("");
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
@@ -145,13 +144,13 @@ export function Chatbox({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              sendPrivateMessage();
+              onSendMessage();
             }
           }}
           className="flex-1 p-[11px] border border-hover rounded-md resize-none select-none focus:outline-none"
         />
         <button
-          onClick={sendPrivateMessage}
+          onClick={onSendMessage}
           className="bg-primary text-white h-12 w-12 rounded-md hover:bg-primary-dark transition flex items-center justify-center"
         >
           <Icon icon="mdi:send" className="size-6" />
