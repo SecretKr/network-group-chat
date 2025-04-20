@@ -18,28 +18,7 @@ export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
       return;
     }
 
-    // const res = await postApiV1ChatGroup({
-    //   body: {
-    //     chatName: groupName,
-    //     users: [],
-    //   } as any,
-    //   headers: {
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    // });
-    // console.log(res);
-    // if (res.response.status !== 200) {
-    //   toast.error("Failed to create group");
-    //   return;
-    // }
-
     const memberUIDs = [uid];
-    // const memberUIDs = userList.map((user) => {
-    //   const uid = user.uid_name.split(":")[0];
-    //   console.log(`🔍 Extracted UID: ${uid} from ${user.uid_name}`);
-    //   return uid;
-    // });
-
     console.log("👥 Member UIDs for group chat:", memberUIDs);
 
     if (!uid) {
@@ -62,7 +41,6 @@ export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
     };
 
     console.log("📦 Emitting 'createChat' with payload:", payload);
-
     socket.emit("createChat", payload, (response: any) => {
       console.log("Server Response:", response);
     });
@@ -93,7 +71,7 @@ export function CreateGroupModal({ onClose }: CreateGroupModalProps) {
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
           placeholder="Enter Name"
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 focus:outline-none focus:ring-none rounded-md"
         />
         <button
           className="w-full bg-primary text-white font-semibold p-2 rounded-md hover:bg-primary-dark transition"

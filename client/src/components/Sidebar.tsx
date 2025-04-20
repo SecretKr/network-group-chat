@@ -112,7 +112,7 @@ export function Sidebar({
               </ul>
               {filteredUserList.length > MAX_USERS_DISPLAYED && (
                 <button
-                  className="text-primary mt-2 hover:underline text-sm font-medium self-center"
+                  className="text-gray-500 mt-4 hover:underline text-sm font-medium self-center"
                   onClick={() => setShowAllUsers(!showAllUsers)}
                 >
                   {showAllUsers ? "Show Less" : "Show More"}

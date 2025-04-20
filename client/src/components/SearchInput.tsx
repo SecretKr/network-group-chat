@@ -17,7 +17,7 @@ export function SearchInput({
         placeholder={placeholder}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="border-none focus:outline-none focus:ring-none focus:ring-primary w-full"
+        className="border-none focus:outline-none focus:ring-none w-full"
       />
       {searchQuery && (
         <Icon

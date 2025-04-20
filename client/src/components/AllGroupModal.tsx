@@ -1,9 +1,6 @@
 import { Icon } from "@iconify/react";
 import { socket } from "../MainPage";
-import { socket } from "../MainPage";
 import { useEffect, useState } from "react";
-import { OpenChat, useChat } from "../utils/ChatContext";
-import { SearchInput } from "./SearchInput";
 import { OpenChat, useChat } from "../utils/ChatContext";
 import { SearchInput } from "./SearchInput";
 
@@ -13,10 +10,7 @@ interface AllGroupModalProps {
 
 export function AllGroupModal({ onClose }: AllGroupModalProps) {
   const { myOpenChatList } = useChat();
-export function AllGroupModal({ onClose }: AllGroupModalProps) {
-  const { myOpenChatList } = useChat();
   const [allOpenChatList, setAllOpenChatList] = useState<OpenChat[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -32,9 +26,6 @@ export function AllGroupModal({ onClose }: AllGroupModalProps) {
 
   const joinedChatIds = new Set(myOpenChatList.map((chat) => chat.chatId));
   const filteredChatList = allOpenChatList.filter(
-    (chat) =>
-      !joinedChatIds.has(chat.chatId) &&
-      chat.chatName.toLowerCase().includes(searchQuery.toLowerCase())
     (chat) =>
       !joinedChatIds.has(chat.chatId) &&
       chat.chatName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -67,16 +58,9 @@ export function AllGroupModal({ onClose }: AllGroupModalProps) {
         />
 
         <ul className="rounded-lg overflow-hidden divide-y divide-hover max-h-80 overflow-y-auto">
-        <SearchInput
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
-
-        <ul className="rounded-lg overflow-hidden divide-y divide-hover max-h-80 overflow-y-auto">
           {filteredChatList.map((openChat) => (
             <li
               key={openChat.chatId}
-              className="cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white hover:bg-hover"
               className="cursor-pointer p-2 pl-4 flex h-12 justify-between items-center transition bg-white hover:bg-hover"
               onClick={() => handleJoinGroup(openChat.chatId)}
             >
@@ -84,14 +68,10 @@ export function AllGroupModal({ onClose }: AllGroupModalProps) {
                 <p>{openChat.chatName}</p>
               </div>
               <button className="w-16 bg-primary text-white font-semibold p-1.5 rounded-md hover:bg-primary-dark transition">
-              <button className="w-16 bg-primary text-white font-semibold p-1.5 rounded-md hover:bg-primary-dark transition">
                 Join
               </button>
             </li>
           ))}
-          {filteredChatList.length === 0 && (
-            <li className="text-center text-gray-500 py-4">No results found</li>
-          )}
           {filteredChatList.length === 0 && (
             <li className="text-center text-gray-500 py-4">No results found</li>
           )}
