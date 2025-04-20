@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { cn } from "../utils/utils";
-import { Icon } from "@iconify/react";
 import { useChat } from "../utils/ChatContext";
+import { SearchInput } from "./SearchInput";
 
 interface SidebarProps {
   getUnreadCount: (user: string) => number;
@@ -66,23 +66,11 @@ export function Sidebar({
 
       <div className="min-h-[calc(100dvh-73px-73px)] max-h-[calc(100dvh-73px-73px)] overflow-auto">
         <div className="flex flex-col p-4 relative">
-          <span className="mb-4 p-2 flex h-12 bg-white items-center rounded-md gap-2">
-            <Icon icon="gg:search" className="size-7 text-gray-400"></Icon>
-            <input
-              type="text"
-              placeholder="Search Chat"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-none focus:outline-none focus:ring-none focus:ring-primary w-full"
-            />
-            {searchQuery && (
-              <Icon
-                icon="radix-icons:cross-2"
-                className="absolute size-6 text-gray-400 cursor-pointer right-6"
-                onClick={() => setSearchQuery("")}
-              ></Icon>
-            )}
-          </span>
+          <SearchInput
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholder="Search Chat"
+          />
 
           {sortedUserList.length > 0 && (
             <>
