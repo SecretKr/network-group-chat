@@ -38,9 +38,9 @@ export function Chatbox({ showAllGroupMember }: ChatboxProps) {
 
   return (
     <div className="flex-1 flex flex-col p-4 bg-background">
-      <div className="text-center relative">
+      <div className="text-center relative h-[58px]">
         <div
-          className={`flex items-center justify-center mb-4 gap-4 ${
+          className={`flex items-center justify-center pb-4 h-full gap-4 ${
             isGroupChat ? "justify-between" : ""
           }`}
         >
@@ -79,14 +79,23 @@ export function Chatbox({ showAllGroupMember }: ChatboxProps) {
       </div>
 
       {userToChat && !isGroupChat ? (
-        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 rounded-md">
           {(messages[userToChat]?.messages || []).map((msg, index) => (
             <div
               key={index}
-              className={`flex ${
+              className={`flex gap-2 ${
                 msg.uid === userToChat ? "justify-start" : "justify-end"
               }`}
             >
+              {msg.uid !== userToChat && (
+                <p className="text-sm text-gray-400 flex items-end">
+                  {msg.createdAt &&
+                    new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </p>
+              )}
               <div
                 key={index}
                 className={`max-w-64 md:max-w-sm p-3 rounded-lg break-words relative mt-3 ${
@@ -102,19 +111,37 @@ export function Chatbox({ showAllGroupMember }: ChatboxProps) {
                 </p>
                 {msg.message}
               </div>
+              {msg.uid === userToChat && (
+                <p className="text-sm text-gray-400 flex items-end">
+                  {msg.createdAt &&
+                    new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </p>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 border rounded-md border-hover">
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-white p-4 rounded-md">
           {(messages[chatId]?.messages || []).map((msg, index) => (
             <div
               key={index}
-              className={`flex ${
+              className={`flex gap-2 ${
                 msg.uid !== uid ? "justify-start" : "justify-end"
               }`}
             >
+              {msg.uid === uid && (
+                <p className="text-sm text-gray-400 flex items-end">
+                  {msg.createdAt &&
+                    new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </p>
+              )}
               <div
                 key={index}
                 className={`max-w-64 md:max-w-sm p-3 rounded-lg break-words relative mt-3 ${
@@ -130,6 +157,15 @@ export function Chatbox({ showAllGroupMember }: ChatboxProps) {
                 </p>
                 {msg.message}
               </div>
+              {msg.uid !== uid && (
+                <p className="text-sm text-gray-400 flex items-end">
+                  {msg.createdAt &&
+                    new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </p>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -147,7 +183,7 @@ export function Chatbox({ showAllGroupMember }: ChatboxProps) {
               onSendMessage();
             }
           }}
-          className="flex-1 p-[11px] border border-hover rounded-md resize-none select-none focus:outline-none"
+          className="flex-1 p-[11px] rounded-md resize-none select-none focus:outline-none"
         />
         <button
           onClick={onSendMessage}

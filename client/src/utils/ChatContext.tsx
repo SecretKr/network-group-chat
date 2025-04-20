@@ -11,6 +11,7 @@ export type Message = {
   uid?: string;
   message: string;
   read: boolean;
+  createdAt?: string;
 };
 
 export type MessageMap = {

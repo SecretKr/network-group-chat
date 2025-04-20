@@ -69,6 +69,7 @@ export const getMessagesByChatId = async (
         username: message.senderId.username,
         message: message.text,
         read: false,
+        createdAt: message.createdAt,
       });
     }
     console.log("Product:");

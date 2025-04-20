@@ -32,7 +32,7 @@ export function AllGroupMember({ onClose }: AllGroupMemberProps) {
       onClick={onClose}
     >
       <div
-        className="bg-background p-4 rounded-lg shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md"
+        className="bg-background p-4 rounded-2xl shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-4 right-4">
