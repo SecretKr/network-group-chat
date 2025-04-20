@@ -2,7 +2,7 @@ import {
   postApiV1Message,
   getApiV1ChatByIdMessageschat,
 } from "../generated/api";
-import { Message } from "../MainPage";
+import { Message } from "./ChatContext";
 
 export const createMessage = async (
   chatId: string,

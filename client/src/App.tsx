@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainPage from "./MainPage";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./auth/AuthContext";
+import { ChatProvider } from "./utils/ChatContext";
 
 const App = () => {
   const [serverReady, setServerReady] = useState(false);
@@ -28,7 +29,9 @@ const App = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       {serverReady ? (
         <AuthProvider>
-          <MainPage />
+          <ChatProvider>
+            <MainPage />
+          </ChatProvider>
         </AuthProvider>
       ) : (
         <div className="flex flex-col items-center">
