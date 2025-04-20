@@ -3,23 +3,17 @@ import { useEffect, useState } from "react";
 import { getGroupMemberById } from "../utils/groupChat";
 import { useAuth } from "../auth/AuthContext";
 import { User } from "../utils/privateChat";
+import { useChat } from "../utils/ChatContext";
 
 interface AllGroupMemberProps {
   onClose: () => void;
-  handleLeaveChat: () => void;
-  chatId: string;
-  token: string;
 }
 
-export function AllGroupMember({
-  onClose,
-  handleLeaveChat,
-  chatId,
-  token,
-}: AllGroupMemberProps) {
+export function AllGroupMember({ onClose }: AllGroupMemberProps) {
   const [allMemberList, setAllMemberList] = useState<User[]>([]);
   const [owner, setOwner] = useState<string>("");
-  const { uid } = useAuth();
+  const { uid, token } = useAuth();
+  const { chatId, handleLeaveChat } = useChat();
 
   useEffect(() => {
     const fetchChatMembers = async () => {
@@ -38,7 +32,7 @@ export function AllGroupMember({
       onClick={onClose}
     >
       <div
-        className="bg-background p-4 rounded-lg shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md"
+        className="bg-background p-4 rounded-2xl shadow-lg relative flex flex-col gap-4 w-[90%] max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-4 right-4">

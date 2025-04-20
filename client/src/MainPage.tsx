@@ -6,123 +6,56 @@ import { Sidebar } from "./components/Sidebar";
 import { Chatbox } from "./components/Chatbox";
 import { useAuth } from "./auth/AuthContext";
 import { getPrivateChats } from "./utils/privateChat";
-import {
-  handleUserToChat,
-  sendPrivateMessage,
-  mergeOnlineStatus,
-  handleGroupToChat,
-} from "./utils/chatHelpers";
 import { CreateGroupModal } from "./components/CreateGroupModal";
 import { AllGroupModal } from "./components/AllGroupModal";
 import { AllGroupMember } from "./components/AllGroupMember";
-import { putApiV1ChatByIdLeave } from "./generated/api";
-
-export type Message = {
-  chatId?: string;
-  username?: string;
-  uid?: string;
-  message: string;
-  read: boolean;
-};
-
-export type MessageMap = {
-  [username: string]: {
-    messages: Message[];
-    unread: number;
-  };
-};
-
-export type UserWithStatus = {
-  uid_name: string; // format: uid:name
-  online: boolean;
-};
-
-export type OpenChat = {
-  chatId: string;
-  chatName: string;
-};
+import {
+  Message,
+  OpenChat,
+  useChat,
+  UserWithStatus,
+} from "./utils/ChatContext";
 
 export const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const MainPage = () => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<MessageMap>({});
-  const [userList, setUserList] = useState<UserWithStatus[]>([]);
-  const [myOpenChatList, setMyOpenChatList] = useState<OpenChat[]>([]);
   const userListRef = useRef<UserWithStatus[]>([]);
   const pendingSocketUsersRef = useRef<string[] | null>(null);
   const [chatUsersReady, setChatUsersReady] = useState(false);
-  const [userToChat, setUserToChat] = useState("");
-  const [chatId, setChatId] = useState("");
-  const [selectedChat, setSelectedChat] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showAllGroupModal, setShowAllGroupModal] = useState(false);
   const [showAllGroupMember, setShowAllGroupMember] = useState(false);
-
   const { uid, name, token, loggedIn } = useAuth();
+  const {
+    messages,
+    setMessages,
+    setUserList,
+    setMyOpenChatList,
+    userToChat,
+    chatId,
+    selectedChat,
+  } = useChat();
 
-  const handleBack = () => {
-    setUserToChat("");
-    setChatId("");
-    setSelectedChat(false);
-  };
+  const mergeOnlineStatus = (
+    baseList: UserWithStatus[],
+    onlineUsers: string[],
+    uid: string
+  ): UserWithStatus[] => {
+    const updated = baseList.map((user) => ({
+      ...user,
+      online: onlineUsers.includes(user.uid_name),
+    }));
 
-  const handleLeaveChat = async () => {
-    try {
-      await putApiV1ChatByIdLeave({
-        path: {
-          id: chatId,
-        },
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      });
+    onlineUsers.forEach((online) => {
+      if (
+        !updated.some((user) => user.uid_name === online) &&
+        online.split(":")[0] !== uid
+      ) {
+        updated.push({ uid_name: online, online: true });
+      }
+    });
 
-      setMyOpenChatList((prev) =>
-        prev.filter((chat) => chat.chatId !== chatId)
-      );
-      handleBack();
-    } catch (error) {
-      console.error("Failed to leave chat:", error);
-      alert("An error occurred while trying to leave the chat.");
-    }
-  };
-
-  const onUserSelect = (user: string) => {
-    handleUserToChat(
-      user,
-      uid,
-      name,
-      token,
-      setUserToChat,
-      setSelectedChat,
-      setChatId,
-      setMessages
-    );
-  };
-
-  const onGroupSelect = (chatId: string) => {
-    handleGroupToChat(
-      chatId,
-      token,
-      setUserToChat,
-      setSelectedChat,
-      setChatId,
-      setMessages
-    );
-  };
-
-  const onSendPrivateMessage = () => {
-    sendPrivateMessage(
-      userToChat,
-      message,
-      uid,
-      socket,
-      chatId,
-      name,
-      setMessage,
-      setMessages
-    );
+    return updated;
   };
 
   useEffect(() => {
@@ -161,7 +94,7 @@ const MainPage = () => {
     if (loggedIn && token) {
       fetchChatUsers();
     }
-  }, [loggedIn, token, uid]);
+  }, [loggedIn, token, uid, setUserList]);
 
   useEffect(() => {
     if (loggedIn && uid) {
@@ -245,13 +178,17 @@ const MainPage = () => {
       socket.off("myOpenChatList");
       socket.off("receiveGroupMessage");
     };
-  }, [uid, userToChat, chatUsersReady, chatId]);
+  }, [
+    uid,
+    userToChat,
+    chatUsersReady,
+    chatId,
+    setMessages,
+    setUserList,
+    setMyOpenChatList,
+  ]);
 
   const getUnreadCount = (uid: string) => messages[uid]?.unread || 0;
-  const chatUserObj = userList.find(
-    (u) => u.uid_name.split(":")[0] === userToChat
-  );
-  const chatGroupObj = myOpenChatList.find((g) => g.chatId === chatId) || null;
 
   socket.on("chatListUpdate", (userChats) => {
     console.log("🔔 Received updated chat list:", userChats);
@@ -262,49 +199,21 @@ const MainPage = () => {
   return (
     <div className="w-screen h-screen flex bg-white">
       <Sidebar
-        userList={userList}
-        openChatList={myOpenChatList}
-        username={name}
-        setUserToChat={onUserSelect}
-        setGroupToChat={onGroupSelect}
-        userToChat={userToChat}
-        setChatId={setChatId}
-        chatId={chatId}
         getUnreadCount={getUnreadCount}
         showAllGroupModal={() => setShowAllGroupModal(true)}
         showCreateGroupModal={() => setShowCreateGroupModal(true)}
       />
       {showAllGroupModal && (
-        <AllGroupModal
-          onClose={() => setShowAllGroupModal(false)}
-          myOpenChatList={myOpenChatList}
-        />
+        <AllGroupModal onClose={() => setShowAllGroupModal(false)} />
       )}
       {showCreateGroupModal && (
         <CreateGroupModal onClose={() => setShowCreateGroupModal(false)} />
       )}
       {showAllGroupMember && (
-        <AllGroupMember
-          onClose={() => setShowAllGroupMember(false)}
-          handleLeaveChat={handleLeaveChat}
-          chatId={chatId}
-          token={token}
-        />
+        <AllGroupMember onClose={() => setShowAllGroupMember(false)} />
       )}
       {selectedChat && (
-        <Chatbox
-          isGroupChat={userToChat === "" && chatId !== ""}
-          handleBack={handleBack}
-          userToChat={userToChat}
-          chatId={chatId}
-          messages={messages}
-          setMessage={setMessage}
-          message={message}
-          sendPrivateMessage={onSendPrivateMessage}
-          chatUserObj={chatUserObj || null}
-          chatGroupObj={chatGroupObj || null}
-          showAllGroupMember={() => setShowAllGroupMember(true)}
-        />
+        <Chatbox showAllGroupMember={() => setShowAllGroupMember(true)} />
       )}
     </div>
   );
