@@ -132,6 +132,7 @@ const MainPage = () => {
         username: data.username,
         message: data.text,
         read: isActiveChat,
+        createdAt: new Date().toISOString(),
       };
 
       setMessages((prev) => {
@@ -158,6 +159,7 @@ const MainPage = () => {
         username: data.username,
         message: data.text,
         read: isActiveGroup,
+        createdAt: new Date().toISOString(),
       };
 
       setMessages((prev) => {

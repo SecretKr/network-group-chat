@@ -135,6 +135,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       username: name,
       uid: uid,
       read: false,
+      createdAt: new Date().toISOString(),
     };
 
     socket.emit("sendMessage", {
